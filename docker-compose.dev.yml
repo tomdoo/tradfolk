@@ -1,0 +1,29 @@
+services:
+  backend:
+    entrypoint: ["sh", "/app/scripts/entrypoint.sh"]
+    environment:
+      APP_ENV: dev
+      GUNICORN_WORKERS: 1
+      GUNICORN_LOG_LEVEL: debug
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/migrations:/app/migrations
+      - ./backend/scripts:/app/scripts
+      - ./proposals.json:/app/data/proposals.json:ro
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+      args:
+        VITE_API_URL: ${API_URL}
+    environment:
+      CHOKIDAR_USEPOLLING: "1"
+      VITE_API_URL: ${API_URL}
+    command: npm run dev -- --host 0.0.0.0 --port 8080
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+volumes:
+  frontend_node_modules:

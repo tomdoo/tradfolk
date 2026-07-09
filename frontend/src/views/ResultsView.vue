@@ -1,0 +1,122 @@
+<template>
+  <section class="screen screen--results active">
+    <div class="results-header-row">
+      <div class="sub-pill">{{ items.length }} propositions</div>
+      <select v-model="sortMode" class="sort-select">
+        <option value="order">Ordre d'ajout</option>
+        <option value="trad">Plutôt Trad</option>
+        <option value="folk">Plutôt Folk</option>
+      </select>
+    </div>
+
+    <div v-if="loading" class="results-empty-state">
+      <h3>Chargement des resultats</h3>
+      <p>On aligne les tendances de piste.</p>
+    </div>
+
+    <div v-else-if="errorMessage" class="results-empty-state">
+      <h3>Résultats indisponibles</h3>
+      <p>{{ errorMessage }}</p>
+    </div>
+
+    <div v-else-if="sortedItems.length === 0" class="results-empty-state">
+      <h3>Pas encore de résultats</h3>
+      <p>
+        Les propositions apparaitront ici dès que les premiers votes seront
+        enregistrés.
+      </p>
+    </div>
+
+    <div v-else class="results-scroll">
+      <article v-for="item in sortedItems" :key="item.id" class="result-card">
+        <div class="result-top">
+          <div class="result-name">{{ item.label }}</div>
+          <div class="result-winner" :class="winnerClass(item)">
+            {{ winnerLabel(item) }}
+          </div>
+        </div>
+
+        <div class="mini-bar">
+          <div
+            class="mini-fill trad"
+            :style="{ width: `${item.percentages.trad}%` }"
+          ></div>
+          <div
+            class="mini-fill folk"
+            :style="{ width: `${item.percentages.folk}%` }"
+          ></div>
+        </div>
+
+        <div class="result-stats-row">
+          <span
+            >Trad {{ item.percentages.trad }}% · {{ item.counts.trad }}</span
+          >
+          <span
+            >Folk {{ item.percentages.folk }}% · {{ item.counts.folk }}</span
+          >
+        </div>
+      </article>
+    </div>
+  </section>
+</template>
+
+<script setup>
+import { computed, ref, onMounted } from 'vue'
+import { api, getApiErrorMessage } from '../api'
+
+const loading = ref(false)
+const items = ref([])
+const sortMode = ref('order')
+const errorMessage = ref('')
+
+const sortedItems = computed(() => {
+  const list = [...items.value]
+  if (sortMode.value === 'trad') {
+    return list.sort(
+      (left, right) => right.percentages.trad - left.percentages.trad
+    )
+  }
+  if (sortMode.value === 'folk') {
+    return list.sort(
+      (left, right) => right.percentages.folk - left.percentages.folk
+    )
+  }
+  return list
+})
+
+function normalizeResult(raw) {
+  return {
+    id: raw.proposal_id || raw.id,
+    label: raw.label,
+    image: raw.image,
+    counts: raw.counts,
+    percentages: raw.percentages,
+  }
+}
+
+function winnerClass(item) {
+  return item.percentages.trad >= item.percentages.folk ? 'trad' : 'folk'
+}
+
+function winnerLabel(item) {
+  return item.percentages.trad >= item.percentages.folk
+    ? 'Plutôt Trad'
+    : 'Plutôt Folk'
+}
+
+onMounted(async () => {
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    const { data } = await api.get('/results')
+    items.value = data.map(normalizeResult)
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(
+      error,
+      'Impossible de recuperer les resultats'
+    )
+  } finally {
+    loading.value = false
+  }
+})
+</script>

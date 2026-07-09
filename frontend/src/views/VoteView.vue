@@ -1,0 +1,417 @@
+<template>
+  <section class="screen screen--vote active">
+    <div
+      v-if="showSwipeTutorial"
+      class="swipe-tutorial-overlay"
+      aria-hidden="true"
+    ></div>
+
+    <div class="progress-row">
+      <div class="session-count">{{ progressLabel }}</div>
+    </div>
+
+    <div class="card-zone">
+      <div
+        v-if="errorMessage"
+        class="error-banner"
+        role="status"
+        aria-live="polite"
+      >
+        {{ errorMessage }}
+      </div>
+
+      <div
+        v-if="showSwipeTutorial"
+        class="swipe-tutorial"
+        role="dialog"
+        aria-live="polite"
+        aria-label="Tutoriel de swipe"
+      >
+        <div class="swipe-tutorial__title">Comment voter ?</div>
+        <p>
+          Glisse la carte vers la gauche pour <strong>Folk</strong> et vers la
+          droite pour <strong>Trad</strong>.
+        </p>
+        <div class="swipe-tutorial__legend">
+          <span>← Folk</span>
+          <span>Trad →</span>
+        </div>
+        <button
+          type="button"
+          class="swipe-tutorial__button"
+          @click="dismissSwipeTutorial"
+        >
+          J’ai compris
+        </button>
+      </div>
+
+      <div v-if="loading" class="done-panel show done-panel--loading">
+        <div class="done-media">
+          <svg
+            viewBox="0 0 64 64"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="32" cy="32" r="22" />
+            <path d="M32 20v13l9 6" />
+          </svg>
+        </div>
+        <p class="loading-phrase">{{ loadingPhrase }}</p>
+      </div>
+
+      <div v-else-if="done" class="done-panel show">
+        <div class="done-media">
+          <svg
+            viewBox="0 0 64 64"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="32" cy="32" r="22" />
+            <path d="M32 20v13l9 6" />
+          </svg>
+        </div>
+        <h3>Plus de propositions pour l’instant</h3>
+        <p>
+          Tu as vote sur toutes celles du moment. Reviens un peu plus tard pour
+          une nouvelle passe.
+        </p>
+        <RouterLink class="next-btn" to="/results"
+          >Voir les resultats</RouterLink
+        >
+      </div>
+
+      <div v-else-if="result" class="stats-panel show">
+        <div class="stamp-badge" :class="lastVoteChoice">
+          {{ lastVoteLabel }}
+        </div>
+        <div class="stats-title">{{ proposal?.label }}</div>
+
+        <div class="bar-row">
+          <div class="bar-label">
+            <span style="color: var(--trad)">Trad</span
+            ><span>{{ result.percentages.trad }}%</span>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill trad"
+              :style="{ width: `${result.percentages.trad}%` }"
+            ></div>
+          </div>
+        </div>
+
+        <div class="bar-row">
+          <div class="bar-label">
+            <span style="color: var(--folk-deep)">Folk</span
+            ><span>{{ result.percentages.folk }}%</span>
+          </div>
+          <div class="bar-track">
+            <div
+              class="bar-fill folk"
+              :style="{ width: `${result.percentages.folk}%` }"
+            ></div>
+          </div>
+        </div>
+
+        <div class="votes-total">
+          {{ result.counts.trad }} votes trad · {{ result.counts.folk }} votes
+          folk
+        </div>
+
+        <button class="next-btn" @click="loadRandom">
+          Proposition suivante
+        </button>
+      </div>
+
+      <div
+        v-else-if="proposal"
+        ref="cardRef"
+        class="card"
+        :style="cardStyle"
+        @pointerdown="handlePointerDown"
+        @pointermove="handlePointerMove"
+        @pointerup="handlePointerUp"
+        @pointercancel="resetSwipe"
+      >
+        <div class="overlay-tag folk" :style="folkOverlayStyle">Folk</div>
+        <div class="overlay-tag trad" :style="tradOverlayStyle">Trad</div>
+
+        <div class="card-media card-media--image">
+          <img
+            v-if="hasDisplayableImage"
+            :src="proposal.image"
+            :alt="proposal.label"
+            @error="handleImageError"
+          />
+          <div v-else class="card-media__fallback" aria-hidden="true">
+            <svg
+              viewBox="0 0 64 64"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="10" y="14" width="44" height="36" rx="6" />
+              <path d="M18 42l10-11 8 8 6-6 4 4" />
+              <circle cx="24" cy="24" r="3" fill="currentColor" stroke="none" />
+            </svg>
+            <span>Pas d’image</span>
+          </div>
+        </div>
+
+        <h2>{{ proposal.label }}</h2>
+      </div>
+    </div>
+
+    <div v-if="!result && !done" class="hint-row">
+      <div class="hint folk"><span class="dot"></span>Folk</div>
+      <div class="hint trad"><span class="dot"></span>Trad</div>
+    </div>
+
+    <div v-if="!result && !done" class="skip-row">
+      <button class="skip-btn" @click="skipProposition">
+        passer sans voter →
+      </button>
+    </div>
+  </section>
+</template>
+
+<script setup>
+import { computed, ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
+import { api, getApiErrorMessage } from '../api'
+
+const loading = ref(false)
+const done = ref(false)
+const proposal = ref(null)
+const result = ref(null)
+const progress = ref({ voted: 0, total: 0, remaining: 0 })
+const cardRef = ref(null)
+const imageErrored = ref(false)
+const swipeStartX = ref(null)
+const swipePointerId = ref(null)
+const swipeOffsetX = ref(0)
+const lastVoteChoice = ref(null)
+const loadingPhrase = ref('')
+const errorMessage = ref('')
+const showSwipeTutorial = ref(false)
+
+const loadingPhrases = [
+  'Changement du fût en cours...',
+  'Les musiciens se mettent d’accord pour la tonalité...',
+  'On accorde les violons et les esprits...',
+  'Le bal va commencer !',
+  'Une dernière mise au point avant la prochaine ronde...',
+  'Cirage des chaussures en cours...',
+  'Pose du parquet en cours...',
+  'Vous avez pensé au talc ?',
+  'On vérifie les cordes de l’accordéon...',
+  'Patientez, c’est le rush à la buvette...',
+  'L’interplateau est un peu mou...',
+  'Bientôt le début du bœuf...',
+]
+
+const SWIPE_THRESHOLD = 110
+const MIN_LOADING_MS = 450
+const SWIPE_TUTORIAL_KEY = 'swipe_tutorial_seen'
+
+const progressLabel = computed(
+  () => `${progress.value.voted} / ${progress.value.total} propositions votees`
+)
+
+const swipeRatio = computed(() =>
+  Math.min(Math.abs(swipeOffsetX.value) / SWIPE_THRESHOLD, 1)
+)
+
+const cardStyle = computed(() => ({
+  transform: `translateX(${swipeOffsetX.value}px) rotate(${swipeOffsetX.value / 24}deg)`,
+}))
+
+const folkOverlayStyle = computed(() => {
+  if (swipeOffsetX.value >= 0) {
+    return { opacity: 0, transform: 'rotate(-14deg) scale(0.85)' }
+  }
+  return {
+    opacity: swipeRatio.value,
+    transform: `rotate(-14deg) scale(${0.85 + swipeRatio.value * 0.15})`,
+  }
+})
+
+const tradOverlayStyle = computed(() => {
+  if (swipeOffsetX.value <= 0) {
+    return { opacity: 0, transform: 'rotate(14deg) scale(0.85)' }
+  }
+  return {
+    opacity: swipeRatio.value,
+    transform: `rotate(14deg) scale(${0.85 + swipeRatio.value * 0.15})`,
+  }
+})
+
+const lastVoteLabel = computed(() =>
+  lastVoteChoice.value === 'trad' ? 'Trad' : 'Folk'
+)
+const hasDisplayableImage = computed(
+  () => Boolean(proposal.value?.image) && !imageErrored.value
+)
+
+function normalizeProposal(raw) {
+  return {
+    id: raw.proposal_id || raw.id,
+    label: raw.label,
+    image: raw.image,
+  }
+}
+
+function preloadProposalImage(imageUrl) {
+  if (!imageUrl) {
+    return Promise.resolve(false)
+  }
+
+  return new Promise((resolve) => {
+    const image = new Image()
+    image.onload = () => resolve(true)
+    image.onerror = () => resolve(false)
+    image.src = imageUrl
+  })
+}
+
+async function loadProgress() {
+  const { data } = await api.get('/progress')
+  progress.value = data
+}
+
+async function loadRandom() {
+  const loadingStartedAt = Date.now()
+  loading.value = true
+  errorMessage.value = ''
+  loadingPhrase.value =
+    loadingPhrases[Math.floor(Math.random() * loadingPhrases.length)]
+  result.value = null
+  imageErrored.value = false
+  resetSwipe()
+  try {
+    const [progressResponse, proposalResponse] = await Promise.all([
+      api.get('/progress'),
+      api.get('/proposals/random'),
+    ])
+    progress.value = progressResponse.data
+    const nextProposal = normalizeProposal(proposalResponse.data)
+    const imageReady = await preloadProposalImage(nextProposal.image)
+    imageErrored.value = !imageReady && Boolean(nextProposal.image)
+    proposal.value = nextProposal
+    done.value = false
+  } catch (e) {
+    if (e?.response?.status === 404) {
+      await loadProgress()
+      done.value = true
+      proposal.value = null
+    } else {
+      errorMessage.value = getApiErrorMessage(
+        e,
+        'Impossible de charger une nouvelle proposition'
+      )
+    }
+  } finally {
+    const elapsed = Date.now() - loadingStartedAt
+    const remainingDelay = Math.max(MIN_LOADING_MS - elapsed, 0)
+    if (remainingDelay > 0) {
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, remainingDelay)
+      })
+    }
+    loading.value = false
+  }
+}
+
+function handleImageError() {
+  imageErrored.value = true
+}
+
+async function vote(value) {
+  if (!proposal.value) return
+  try {
+    errorMessage.value = ''
+    lastVoteChoice.value = value
+    const { data } = await api.post('/votes', {
+      proposal_id: proposal.value.id,
+      valeur: value,
+    })
+    result.value = data
+    progress.value = {
+      ...progress.value,
+      voted: Math.min(progress.value.voted + 1, progress.value.total),
+      remaining: Math.max(progress.value.remaining - 1, 0),
+    }
+  } catch (e) {
+    errorMessage.value = getApiErrorMessage(e, 'Erreur lors de l’envoi du vote')
+  }
+}
+
+async function skipProposition() {
+  if (loading.value || result.value) return
+  await loadRandom()
+}
+
+function resetSwipe() {
+  swipeStartX.value = null
+  swipePointerId.value = null
+  swipeOffsetX.value = 0
+}
+
+function dismissSwipeTutorial() {
+  showSwipeTutorial.value = false
+  localStorage.setItem(SWIPE_TUTORIAL_KEY, '1')
+}
+
+function handlePointerDown(event) {
+  if (result.value) return
+  if (showSwipeTutorial.value) {
+    dismissSwipeTutorial()
+  }
+  swipeStartX.value = event.clientX
+  swipePointerId.value = event.pointerId
+  event.currentTarget.setPointerCapture(event.pointerId)
+}
+
+function handlePointerMove(event) {
+  if (
+    swipePointerId.value !== event.pointerId ||
+    swipeStartX.value === null ||
+    result.value
+  ) {
+    return
+  }
+  swipeOffsetX.value = event.clientX - swipeStartX.value
+}
+
+function handlePointerUp(event) {
+  if (
+    swipePointerId.value !== event.pointerId ||
+    swipeStartX.value === null ||
+    result.value
+  ) {
+    resetSwipe()
+    return
+  }
+
+  const deltaX = event.clientX - swipeStartX.value
+  resetSwipe()
+
+  if (deltaX <= -SWIPE_THRESHOLD) {
+    vote('folk')
+  } else if (deltaX >= SWIPE_THRESHOLD) {
+    vote('trad')
+  }
+}
+
+onMounted(async () => {
+  showSwipeTutorial.value = localStorage.getItem(SWIPE_TUTORIAL_KEY) !== '1'
+  await loadRandom()
+})
+</script>

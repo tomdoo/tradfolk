@@ -1,0 +1,11 @@
+.env
+proposals.json
+postgres-data/
+
+backend/.ruff_cache/
+backend/app/__pycache__/
+backend/migrations/__pycache__/
+backend/migrations/versions/__pycache__/
+
+frontend/dist/
+frontend/node_modules/

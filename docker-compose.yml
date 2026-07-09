@@ -1,0 +1,79 @@
+services:
+  traefik:
+    image: traefik:v3.7
+    command:
+      - --log.level=${TRAEFIK_LOG_LEVEL:-INFO}
+      - --providers.docker=true
+      - --providers.docker.network=web
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.${TRAEFIK_WEB_ENTRYPOINT:-web}.address=:${TRAEFIK_WEB_ENTRYPOINT_PORT:-80}
+      - --entrypoints.${TRAEFIK_WEBSECURE_ENTRYPOINT:-websecure}.address=:${TRAEFIK_WEBSECURE_ENTRYPOINT_PORT:-443}
+      - --entrypoints.${TRAEFIK_WEB_ENTRYPOINT:-web}.http.redirections.entrypoint.to=${TRAEFIK_WEBSECURE_ENTRYPOINT:-websecure}
+      - --entrypoints.${TRAEFIK_WEB_ENTRYPOINT:-web}.http.redirections.entrypoint.scheme=https
+    ports:
+      - "${TRAEFIK_HTTP_PORT:-80}:${TRAEFIK_WEB_ENTRYPOINT_PORT:-80}"
+      - "${TRAEFIK_HTTPS_PORT:-443}:${TRAEFIK_WEBSECURE_ENTRYPOINT_PORT:-443}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [web]
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  backend:
+    build: ./backend
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./proposals.json:/app/data/proposals.json:ro
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.backend.rule=${TRAEFIK_BACKEND_RULE:-Host(`api.tradfolk.local`)}
+      - traefik.http.routers.backend.entrypoints=${TRAEFIK_WEBSECURE_ENTRYPOINT:-websecure}
+      - traefik.http.routers.backend.tls=true
+      - traefik.http.services.backend.loadbalancer.server.port=${TRAEFIK_BACKEND_PORT:-8000}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)\""]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    networks: [web, internal]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+      args:
+        VITE_API_URL: ${API_URL}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.frontend.rule=${TRAEFIK_FRONTEND_RULE:-Host(`tradfolk.local`)}
+      - traefik.http.routers.frontend.entrypoints=${TRAEFIK_WEBSECURE_ENTRYPOINT:-websecure}
+      - traefik.http.routers.frontend.tls=true
+      - traefik.http.services.frontend.loadbalancer.server.port=${TRAEFIK_FRONTEND_PORT:-8080}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    networks: [web]
+networks:
+  web:
+    name: web
+  internal:

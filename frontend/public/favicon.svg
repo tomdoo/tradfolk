@@ -1,0 +1,25 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="cardClip">
+      <rect x="2" y="2" width="60" height="60" rx="16"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#cardClip)">
+    <rect x="2" y="2" width="60" height="60" fill="#FFF6E8"/>
+  </g>
+
+  <text x="17" y="45"
+        font-family="Arial, Helvetica, sans-serif"
+        font-weight="900"
+        font-size="40"
+        fill="#3D4FE0"
+        text-anchor="middle">T</text>
+
+  <text x="45" y="45"
+        font-family="Arial, Helvetica, sans-serif"
+        font-weight="900"
+        font-size="40"
+        fill="#FF8A3D"
+        text-anchor="middle">F</text>
+</svg>
