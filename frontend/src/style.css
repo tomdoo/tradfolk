@@ -701,6 +701,39 @@ select {
   text-align: center;
 }
 
+.results-loading-card {
+  margin: 14px auto 0;
+  width: min(100%, 290px);
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 14px 24px -20px rgba(36, 27, 51, 0.45);
+}
+
+.results-loading-media {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: var(--cream-dim);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.results-loading-media svg {
+  width: 26px;
+  height: 26px;
+}
+
+.results-loading-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .results-empty-state h3 {
   font-size: 20px;
   margin: 0 0 10px;

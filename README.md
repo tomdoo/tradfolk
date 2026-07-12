@@ -160,60 +160,6 @@ make check
 make build-images
 ```
 
-### Frontend seulement
-
-- Dossier: [frontend](frontend)
-- Scripts disponibles: voir [frontend/package.json](frontend/package.json)
-
-Exemples:
-
-```bash
-cd frontend
-npm install
-npm run dev
-npm run check
-```
-
-### Backend seulement
-
-- Dossier: [backend](backend)
-
-Exemples:
-
-```bash
-cd backend
-pip install -r requirements-dev.txt
-ruff check app migrations
-python -m compileall app migrations
-```
-
-## API (résumé)
-
-Endpoints principaux dans [backend/app/main.py](backend/app/main.py):
-
-- GET /health
-- GET /proposals/random
-- GET /progress
-- POST /votes
-- GET /results
-
-L'API applique:
-
-- Rate limiting par origine/IP
-- Validation de payload sur /votes
-- Cookie d'origine signé (httponly, secure, samesite=lax)
-
-## Migrations
-
-- Migration initiale unique: [backend/migrations/versions/0001_init.py](backend/migrations/versions/0001_init.py)
-
-Pour appliquer:
-
-```bash
-cd backend
-alembic upgrade head
-```
-
 ## Réinitialiser complètement la base locale
 
 Si tu veux repartir de zéro:
@@ -243,22 +189,3 @@ Workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 Jobs:
 
 - quality: installe les dépendances puis lance lint + check
-- docker-build: build des images backend/frontend
-
-## Dépannage
-
-- HTTPS local inaccessible:
-  - vérifier les entrées hosts
-  - vérifier que les ports 80 et 443 sont libres
-
-- Erreur CORS:
-  - vérifier que CORS_ORIGINS est exactement l'URL de l'app dans .env
-  - vérifier l'URL utilisée côté navigateur
-
-- Pas de propositions:
-  - vérifier le fichier [proposals.json](proposals.json)
-  - vérifier les logs backend au démarrage (import)
-
-- Erreur migration:
-  - vérifier les variables POSTGRES_*
-  - vérifier que le service db est healthy

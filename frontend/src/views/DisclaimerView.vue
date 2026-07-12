@@ -19,6 +19,17 @@
         telle qu’elle évolue au fil des passages.
       </p>
 
+      <p>
+        Ce projet est aussi participatif : si tu veux proposer des idées,
+        signaler un bug ou contribuer au code, passe sur
+        <a
+          href="https://github.com/tomdoo/tradfolk"
+          target="_blank"
+          rel="noopener noreferrer"
+          >GitHub</a
+        >.
+      </p>
+
       <p>Swipe honnête, débat éternel : à toi de voter.</p>
 
       <div class="credit-line">ALORS, TRAD OU FOLK ?</div>

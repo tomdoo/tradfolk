@@ -43,8 +43,8 @@ def upgrade():
             sa.ForeignKey("proposal.id", ondelete="CASCADE"),
             nullable=False,
         ),
-        sa.Column("valeur", vote_enum, nullable=False),
-        sa.Column("origine", sa.String(length=128), nullable=False),
+        sa.Column("value", vote_enum, nullable=False),
+        sa.Column("origin", sa.String(length=128), nullable=False),
         sa.Column(
             "voted_at",
             sa.DateTime(timezone=True),
@@ -53,17 +53,17 @@ def upgrade():
         ),
     )
 
-    op.create_unique_constraint("uq_vote_proposal_origine", "vote", ["id_proposal", "origine"])
+    op.create_unique_constraint("uq_vote_proposal_origin", "vote", ["id_proposal", "origin"])
     op.create_index("ix_vote_id_proposal", "vote", ["id_proposal"])
-    op.create_index("ix_vote_origine", "vote", ["origine"])
-    op.create_index("ix_vote_origine_id_proposal", "vote", ["origine", "id_proposal"])
+    op.create_index("ix_vote_origin", "vote", ["origin"])
+    op.create_index("ix_vote_origin_id_proposal", "vote", ["origin", "id_proposal"])
 
 
 def downgrade():
-    op.drop_index("ix_vote_origine_id_proposal", table_name="vote")
-    op.drop_index("ix_vote_origine", table_name="vote")
+    op.drop_index("ix_vote_origin_id_proposal", table_name="vote")
+    op.drop_index("ix_vote_origin", table_name="vote")
     op.drop_index("ix_vote_id_proposal", table_name="vote")
-    op.drop_constraint("uq_vote_proposal_origine", "vote", type_="unique")
+    op.drop_constraint("uq_vote_proposal_origin", "vote", type_="unique")
     op.drop_table("vote")
     op.drop_table("proposal")
     vote_enum.drop(op.get_bind(), checkfirst=True)

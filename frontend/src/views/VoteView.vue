@@ -186,6 +186,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api, getApiErrorMessage } from '../api'
+import { pickLoadingPhrase, waitForMinimumDelay } from '../loadingState'
 
 const loading = ref(false)
 const done = ref(false)
@@ -202,23 +203,7 @@ const loadingPhrase = ref('')
 const errorMessage = ref('')
 const showSwipeTutorial = ref(false)
 
-const loadingPhrases = [
-  'Changement du fût en cours...',
-  'Les musiciens se mettent d’accord pour la tonalité...',
-  'On accorde les violons et les esprits...',
-  'Le bal va commencer !',
-  'Une dernière mise au point avant la prochaine ronde...',
-  'Cirage des chaussures en cours...',
-  'Pose du parquet en cours...',
-  'Vous avez pensé au talc ?',
-  'On vérifie les cordes de l’accordéon...',
-  'Patientez, c’est le rush à la buvette...',
-  'L’interplateau est un peu mou...',
-  'Bientôt le début du bœuf...',
-]
-
 const SWIPE_THRESHOLD = 110
-const MIN_LOADING_MS = 450
 const SWIPE_TUTORIAL_KEY = 'swipe_tutorial_seen'
 
 const progressLabel = computed(
@@ -290,8 +275,7 @@ async function loadRandom() {
   const loadingStartedAt = Date.now()
   loading.value = true
   errorMessage.value = ''
-  loadingPhrase.value =
-    loadingPhrases[Math.floor(Math.random() * loadingPhrases.length)]
+  loadingPhrase.value = pickLoadingPhrase()
   result.value = null
   imageErrored.value = false
   resetSwipe()
@@ -318,13 +302,7 @@ async function loadRandom() {
       )
     }
   } finally {
-    const elapsed = Date.now() - loadingStartedAt
-    const remainingDelay = Math.max(MIN_LOADING_MS - elapsed, 0)
-    if (remainingDelay > 0) {
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, remainingDelay)
-      })
-    }
+    await waitForMinimumDelay(loadingStartedAt)
     loading.value = false
   }
 }
@@ -340,7 +318,7 @@ async function vote(value) {
     lastVoteChoice.value = value
     const { data } = await api.post('/votes', {
       proposal_id: proposal.value.id,
-      valeur: value,
+      value,
     })
     result.value = data
     progress.value = {

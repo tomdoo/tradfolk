@@ -3,15 +3,30 @@
     <div class="results-header-row">
       <div class="sub-pill">{{ items.length }} propositions</div>
       <select v-model="sortMode" class="sort-select">
-        <option value="order">Ordre d'ajout</option>
+        <option value="order">Ordre alphabétique</option>
         <option value="trad">Plutôt Trad</option>
         <option value="folk">Plutôt Folk</option>
       </select>
     </div>
 
     <div v-if="loading" class="results-empty-state">
-      <h3>Chargement des resultats</h3>
-      <p>On aligne les tendances de piste.</p>
+      <h3>Chargement des résultats</h3>
+      <div class="results-loading-card" role="status" aria-live="polite">
+        <div class="results-loading-media" aria-hidden="true">
+          <svg
+            viewBox="0 0 64 64"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="32" cy="32" r="22" />
+            <path d="M32 20v13l9 6" />
+          </svg>
+        </div>
+        <p>{{ loadingPhrase }}</p>
+      </div>
     </div>
 
     <div v-else-if="errorMessage" class="results-empty-state">
@@ -63,11 +78,13 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { api, getApiErrorMessage } from '../api'
+import { pickLoadingPhrase, waitForMinimumDelay } from '../loadingState'
 
 const loading = ref(false)
 const items = ref([])
 const sortMode = ref('order')
 const errorMessage = ref('')
+const loadingPhrase = ref('')
 
 const sortedItems = computed(() => {
   const list = [...items.value]
@@ -105,8 +122,10 @@ function winnerLabel(item) {
 }
 
 onMounted(async () => {
+  const loadingStartedAt = Date.now()
   loading.value = true
   errorMessage.value = ''
+  loadingPhrase.value = pickLoadingPhrase()
   try {
     const { data } = await api.get('/results')
     items.value = data.map(normalizeResult)
@@ -116,6 +135,7 @@ onMounted(async () => {
       'Impossible de recuperer les resultats'
     )
   } finally {
+    await waitForMinimumDelay(loadingStartedAt)
     loading.value = false
   }
 })

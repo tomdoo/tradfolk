@@ -36,7 +36,7 @@ class Proposal(Base):
 
 class Vote(Base):
     __tablename__ = "vote"
-    __table_args__ = (UniqueConstraint("id_proposal", "origine", name="uq_vote_proposal_origine"),)
+    __table_args__ = (UniqueConstraint("id_proposal", "origin", name="uq_vote_proposal_origin"),)
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -48,11 +48,11 @@ class Vote(Base):
         ForeignKey("proposal.id", ondelete="CASCADE"),
         nullable=False,
     )
-    valeur: Mapped[VoteValue] = mapped_column(
+    value: Mapped[VoteValue] = mapped_column(
         Enum(VoteValue, name="vote_value", create_type=False),
         nullable=False,
     )
-    origine: Mapped[str] = mapped_column(String(128), nullable=False)
+    origin: Mapped[str] = mapped_column(String(128), nullable=False)
     voted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

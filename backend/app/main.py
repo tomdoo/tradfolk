@@ -57,7 +57,7 @@ ORIGIN_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
 class VotePayload(BaseModel):
     proposal_id: uuid.UUID
-    valeur: VoteValue
+    value: VoteValue
 
 
 def json_error(message: str, status: HTTPStatus):
@@ -152,7 +152,7 @@ def get_random_proposal():
 
     with SessionLocal() as session:
         already_voted = (
-            select(Vote.id).where(Vote.id_proposal == Proposal.id, Vote.origine == origin).exists()
+            select(Vote.id).where(Vote.id_proposal == Proposal.id, Vote.origin == origin).exists()
         )
 
         candidate = session.execute(
@@ -191,7 +191,7 @@ def get_progress():
                 select(func.count())
                 .select_from(Vote)
                 .join(Proposal, Proposal.id == Vote.id_proposal)
-                .where(Vote.origine == origin, Proposal.active.is_(True))
+                .where(Vote.origin == origin, Proposal.active.is_(True))
             )
             or 0
         )
@@ -218,7 +218,7 @@ def create_vote():
         if not p or not p.active:
             return json_error("Proposition introuvable", HTTPStatus.NOT_FOUND)
 
-        session.add(Vote(id_proposal=pid, valeur=payload.valeur, origine=origin))
+        session.add(Vote(id_proposal=pid, value=payload.value, origin=origin))
         try:
             session.commit()
         except IntegrityError:
@@ -228,11 +228,11 @@ def create_vote():
         stats_row = session.execute(
             select(
                 func.coalesce(
-                    func.sum(case((Vote.valeur == VoteValue.trad, 1), else_=0)),
+                    func.sum(case((Vote.value == VoteValue.trad, 1), else_=0)),
                     0,
                 ).label("trad"),
                 func.coalesce(
-                    func.sum(case((Vote.valeur == VoteValue.folk, 1), else_=0)),
+                    func.sum(case((Vote.value == VoteValue.folk, 1), else_=0)),
                     0,
                 ).label("folk"),
             ).where(Vote.id_proposal == pid)
@@ -265,11 +265,11 @@ def get_results():
                 Proposal.image,
                 Proposal.active,
                 func.coalesce(
-                    func.sum(case((Vote.valeur == VoteValue.trad, 1), else_=0)),
+                    func.sum(case((Vote.value == VoteValue.trad, 1), else_=0)),
                     0,
                 ).label("trad"),
                 func.coalesce(
-                    func.sum(case((Vote.valeur == VoteValue.folk, 1), else_=0)),
+                    func.sum(case((Vote.value == VoteValue.folk, 1), else_=0)),
                     0,
                 ).label("folk"),
             )
