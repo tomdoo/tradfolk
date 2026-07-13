@@ -86,7 +86,7 @@
         >
       </div>
 
-      <div v-else-if="result" class="stats-panel show">
+      <div v-else-if="result" class="stats-panel show stats-panel--flip-in">
         <div class="stamp-badge" :class="lastVoteChoice">
           {{ lastVoteLabel }}
         </div>
@@ -165,7 +165,7 @@
           </div>
         </div>
 
-        <h2>{{ proposal.label }}</h2>
+        <h2 :class="cardTitleClass">{{ proposal.label }}</h2>
       </div>
     </div>
 
@@ -198,12 +198,15 @@ const imageErrored = ref(false)
 const swipeStartX = ref(null)
 const swipePointerId = ref(null)
 const swipeOffsetX = ref(0)
+const swipeAnimatingOut = ref(false)
+const swipeAnimationDirection = ref(0)
 const lastVoteChoice = ref(null)
 const loadingPhrase = ref('')
 const errorMessage = ref('')
 const showSwipeTutorial = ref(false)
 
 const SWIPE_THRESHOLD = 110
+const SWIPE_EXIT_DURATION_MS = 260
 const SWIPE_TUTORIAL_KEY = 'swipe_tutorial_seen'
 
 const progressLabel = computed(
@@ -215,7 +218,13 @@ const swipeRatio = computed(() =>
 )
 
 const cardStyle = computed(() => ({
-  transform: `translateX(${swipeOffsetX.value}px) rotate(${swipeOffsetX.value / 24}deg)`,
+  transform: `translateX(${swipeOffsetX.value}px) rotate(${swipeAnimatingOut.value ? swipeAnimationDirection.value * 16 : swipeOffsetX.value / 24}deg)`,
+  transition: swipeAnimatingOut.value
+    ? `transform ${SWIPE_EXIT_DURATION_MS}ms cubic-bezier(0.22, 0.64, 0.17, 0.98), opacity ${SWIPE_EXIT_DURATION_MS}ms ease`
+    : swipeStartX.value === null
+      ? 'transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+      : 'none',
+  opacity: swipeAnimatingOut.value ? 0.08 : 1,
 }))
 
 const folkOverlayStyle = computed(() => {
@@ -244,6 +253,26 @@ const lastVoteLabel = computed(() =>
 const hasDisplayableImage = computed(
   () => Boolean(proposal.value?.image) && !imageErrored.value
 )
+const cardTitleClass = computed(() => {
+  const labelLength = proposal.value?.label?.length ?? 0
+  if (labelLength >= 70) {
+    return 'card-title--xlong'
+  }
+  if (labelLength >= 52) {
+    return 'card-title--long'
+  }
+  return ''
+})
+
+function getSwipeExitDistance() {
+  return Math.max(window.innerWidth + 180, 520)
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
 
 function normalizeProposal(raw) {
   return {
@@ -312,7 +341,7 @@ function handleImageError() {
 }
 
 async function vote(value) {
-  if (!proposal.value) return
+  if (!proposal.value) return false
   try {
     errorMessage.value = ''
     lastVoteChoice.value = value
@@ -326,19 +355,43 @@ async function vote(value) {
       voted: Math.min(progress.value.voted + 1, progress.value.total),
       remaining: Math.max(progress.value.remaining - 1, 0),
     }
+    return true
   } catch (e) {
     errorMessage.value = getApiErrorMessage(e, 'Erreur lors de l’envoi du vote')
+    return false
+  }
+}
+
+async function swipeOutAndVote(value) {
+  if (swipeAnimatingOut.value || loading.value || !proposal.value) {
+    return
+  }
+
+  const direction = value === 'trad' ? 1 : -1
+  swipeAnimatingOut.value = true
+  swipeAnimationDirection.value = direction
+  swipeOffsetX.value = direction * getSwipeExitDistance()
+
+  await wait(SWIPE_EXIT_DURATION_MS - 30)
+  const sent = await vote(value)
+
+  swipeAnimatingOut.value = false
+  swipeAnimationDirection.value = 0
+  if (!sent) {
+    swipeOffsetX.value = 0
   }
 }
 
 async function skipProposition() {
-  if (loading.value || result.value) return
+  if (loading.value || result.value || swipeAnimatingOut.value) return
   await loadRandom()
 }
 
 function resetSwipe() {
   swipeStartX.value = null
   swipePointerId.value = null
+  swipeAnimatingOut.value = false
+  swipeAnimationDirection.value = 0
   swipeOffsetX.value = 0
 }
 
@@ -348,7 +401,7 @@ function dismissSwipeTutorial() {
 }
 
 function handlePointerDown(event) {
-  if (result.value) return
+  if (result.value || loading.value || swipeAnimatingOut.value) return
   if (showSwipeTutorial.value) {
     dismissSwipeTutorial()
   }
@@ -361,7 +414,8 @@ function handlePointerMove(event) {
   if (
     swipePointerId.value !== event.pointerId ||
     swipeStartX.value === null ||
-    result.value
+    result.value ||
+    swipeAnimatingOut.value
   ) {
     return
   }
@@ -378,13 +432,20 @@ function handlePointerUp(event) {
     return
   }
 
+  if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+    event.currentTarget.releasePointerCapture(event.pointerId)
+  }
+
   const deltaX = event.clientX - swipeStartX.value
-  resetSwipe()
+  swipeStartX.value = null
+  swipePointerId.value = null
 
   if (deltaX <= -SWIPE_THRESHOLD) {
-    vote('folk')
+    swipeOutAndVote('folk')
   } else if (deltaX >= SWIPE_THRESHOLD) {
-    vote('trad')
+    swipeOutAndVote('trad')
+  } else {
+    swipeOffsetX.value = 0
   }
 }
 
