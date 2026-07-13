@@ -3,12 +3,12 @@
     <div class="about-scroll">
       <div class="about-hero">
         « C’est pas trad ça, c’est folk ! » <br />
-        — Là que tout a commencé.
+        — Là où tout commence.
       </div>
 
       <p>
         <strong>Trad ou Folk ?</strong> ne tranche pas le débat, il le met en
-        scène. Une proposition apparait, tu glisses la carte à droite si tu
+        scène. Une proposition apparaît, tu glisses la carte à droite si tu
         penses <strong>Trad</strong>, à gauche si tu penses
         <strong>Folk</strong>.
       </p>
