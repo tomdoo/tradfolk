@@ -76,13 +76,13 @@
             <path d="M32 20v13l9 6" />
           </svg>
         </div>
-        <h3>Plus de propositions pour l’instant</h3>
+        <h3>Plus de proposition pour l’instant</h3>
         <p>
-          Tu as vote sur toutes celles du moment. Reviens un peu plus tard pour
+          Tu as voté sur toutes celles du moment. Reviens un peu plus tard pour
           une nouvelle passe.
         </p>
         <RouterLink class="next-btn" to="/results"
-          >Voir les resultats</RouterLink
+          >Voir les résultats</RouterLink
         >
       </div>
 
