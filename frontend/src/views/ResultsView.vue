@@ -25,7 +25,7 @@
             <path d="M32 20v13l9 6" />
           </svg>
         </div>
-        <p>{{ loadingPhrase }}</p>
+        <p>{{ loadingPhrase }}<br>Veuillez patienter...</p>
       </div>
     </div>
 

@@ -1,19 +1,25 @@
 export const MIN_LOADING_MS = 2000
 
 const LOADING_PHRASES = [
-  'Changement du fût en cours...',
-  "Les musiciens se mettent d'accord pour la tonalité...",
-  'On accorde les violons et les esprits...',
-  'Le bal va commencer !',
-  'Une dernière mise au point avant la prochaine ronde...',
-  'Cirage des chaussures en cours...',
-  'Pose du parquet en cours...',
-  'Vous avez pensé au talc ?',
-  "On vérifie les cordes de l'accordéon...",
-  "Patientez, c'est le rush à la buvette...",
-  "L'interplateau est un peu mou...",
-  'Bientôt le début du bœuf...',
-  'Annulation du Son Continu, veuillez patienter...',
+  'Changement du fût en cours.',
+  'Les musiciens se mettent d’accord pour la tonalité.',
+  'On accorde les violons et les esprits.',
+  'Le bal va commencer.',
+  'Une dernière mise au point avant la prochaine ronde.',
+  'Cirage des chaussures en cours.',
+  'Pose du parquet en cours.',
+  'Dispersion du talc.',
+  'On vérifie les cordes de l’accordéon.',
+  'C’est le rush à la buvette.',
+  'L’interplateau est un peu mou.',
+  'Bientôt le début du bœuf.',
+  'Annulation du Son Continu.',
+  'Les vielles s’accordent (encore).',
+  'Réparation du parquet de sautière en cours.',
+  'Le pilé-menu de Fleuves vient de commencer.',
+  'Il y a du monde à la douche.',
+  'Contrôle sécurité du Son Continu.',
+  'Balances en cours.',
 ]
 
 export function pickLoadingPhrase() {
