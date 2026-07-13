@@ -407,7 +407,17 @@ select {
 
 .hint.trad {
   color: var(--trad);
-  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.hint .swipe-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .hint .dot,

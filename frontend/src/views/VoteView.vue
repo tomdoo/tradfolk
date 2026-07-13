@@ -170,8 +170,8 @@
     </div>
 
     <div v-if="!result && !done" class="hint-row">
-      <div class="hint trad"><span class="dot"></span>Trad</div>
-      <div class="hint folk"><span class="dot"></span>Folk</div>
+      <div class="hint trad"><span class="swipe-arrow">←</span>Trad</div>
+      <div class="hint folk">Folk<span class="swipe-arrow">→</span></div>
     </div>
 
     <div v-if="!result && !done" class="skip-row">
