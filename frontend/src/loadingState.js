@@ -20,7 +20,10 @@ export function pickLoadingPhrase() {
   return LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]
 }
 
-export async function waitForMinimumDelay(startedAt, minDelayMs = MIN_LOADING_MS) {
+export async function waitForMinimumDelay(
+  startedAt,
+  minDelayMs = MIN_LOADING_MS
+) {
   const elapsed = Date.now() - startedAt
   const remainingDelay = Math.max(minDelayMs - elapsed, 0)
   if (remainingDelay <= 0) {
