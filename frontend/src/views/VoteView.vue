@@ -59,7 +59,9 @@
             <path d="M32 20v13l9 6" />
           </svg>
         </div>
-        <p class="loading-phrase">{{ loadingPhrase }}<br>Veuillez patienter...</p>
+        <p class="loading-phrase">
+          {{ loadingPhrase }}<br />Veuillez patienter...
+        </p>
       </div>
 
       <div v-else-if="done" class="done-panel show">
