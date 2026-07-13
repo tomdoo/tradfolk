@@ -8,8 +8,8 @@
 
       <p>
         <strong>Trad ou Folk ?</strong> ne tranche pas le débat, il le met en
-        scène. Une proposition apparaît, tu glisses la carte à droite si tu
-        penses <strong>Trad</strong>, à gauche si tu penses
+        scène. Une proposition apparaît, tu glisses la carte à gauche si tu
+        penses <strong>Trad</strong>, à droite si tu penses
         <strong>Folk</strong>.
       </p>
 

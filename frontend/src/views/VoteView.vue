@@ -29,12 +29,12 @@
       >
         <div class="swipe-tutorial__title">Comment voter ?</div>
         <p>
-          Glisse la carte vers la gauche pour <strong>Folk</strong> et vers la
-          droite pour <strong>Trad</strong>.
+          Glisse la carte vers la gauche pour <strong>Trad</strong> et vers la
+          droite pour <strong>Folk</strong>.
         </p>
         <div class="swipe-tutorial__legend">
-          <span>← Folk</span>
-          <span>Trad →</span>
+          <span>← Trad</span>
+          <span>Folk →</span>
         </div>
         <button
           type="button"
@@ -170,8 +170,8 @@
     </div>
 
     <div v-if="!result && !done" class="hint-row">
-      <div class="hint folk"><span class="dot"></span>Folk</div>
       <div class="hint trad"><span class="dot"></span>Trad</div>
+      <div class="hint folk"><span class="dot"></span>Folk</div>
     </div>
 
     <div v-if="!result && !done" class="skip-row">
@@ -228,7 +228,7 @@ const cardStyle = computed(() => ({
 }))
 
 const folkOverlayStyle = computed(() => {
-  if (swipeOffsetX.value >= 0) {
+  if (swipeOffsetX.value <= 0) {
     return { opacity: 0, transform: 'rotate(-14deg) scale(0.85)' }
   }
   return {
@@ -238,7 +238,7 @@ const folkOverlayStyle = computed(() => {
 })
 
 const tradOverlayStyle = computed(() => {
-  if (swipeOffsetX.value <= 0) {
+  if (swipeOffsetX.value >= 0) {
     return { opacity: 0, transform: 'rotate(14deg) scale(0.85)' }
   }
   return {
@@ -367,7 +367,7 @@ async function swipeOutAndVote(value) {
     return
   }
 
-  const direction = value === 'trad' ? 1 : -1
+  const direction = value === 'trad' ? -1 : 1
   swipeAnimatingOut.value = true
   swipeAnimationDirection.value = direction
   swipeOffsetX.value = direction * getSwipeExitDistance()
@@ -441,9 +441,9 @@ function handlePointerUp(event) {
   swipePointerId.value = null
 
   if (deltaX <= -SWIPE_THRESHOLD) {
-    swipeOutAndVote('folk')
-  } else if (deltaX >= SWIPE_THRESHOLD) {
     swipeOutAndVote('trad')
+  } else if (deltaX >= SWIPE_THRESHOLD) {
+    swipeOutAndVote('folk')
   } else {
     swipeOffsetX.value = 0
   }

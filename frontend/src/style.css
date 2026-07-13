@@ -391,15 +391,18 @@ select {
 .hint {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
+  width: 50%;
 }
 
 .hint.folk {
   color: var(--folk-deep);
+  justify-content: flex-end;
 }
 
 .hint.trad {
