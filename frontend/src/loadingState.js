@@ -20,6 +20,8 @@ const LOADING_PHRASES = [
   'Il y a du monde à la douche.',
   'Contrôle sécurité du Son Continu.',
   'Balances en cours.',
+  'Repiage de la tente 2 secondes en cours',
+  'Remplaillage de Bijou en cours.',
 ]
 
 export function pickLoadingPhrase() {
