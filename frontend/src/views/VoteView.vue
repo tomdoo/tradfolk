@@ -80,7 +80,8 @@
         </div>
         <h3>Plus de proposition pour l’instant</h3>
         <p>
-          Tu as voté sur toutes les propositions disponibles pour le moment. Reviens plus tard pour de nouvelles propositions !
+          Tu as voté sur toutes les propositions disponibles pour le moment.
+          Reviens plus tard pour de nouvelles propositions !
         </p>
         <RouterLink class="next-btn next-btn--ghost" to="/propose"
           >Envoyer une proposition</RouterLink
