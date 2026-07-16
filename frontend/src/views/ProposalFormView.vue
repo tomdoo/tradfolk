@@ -4,7 +4,8 @@
       <div class="proposal-hero">
         <h2>Envoyer une proposition</h2>
         <p>
-          Remplis ce formulaire pour soumettre une nouvelle proposition. Une fois envoyée il te sera demandé de la valider par email.
+          Remplis ce formulaire pour soumettre une nouvelle proposition. Une
+          fois envoyée il te sera demandé de la valider par email.
         </p>
       </div>
 
@@ -139,7 +140,8 @@ function loadTurnstileScript() {
 
     const script = document.createElement('script')
     script.id = TURNSTILE_SCRIPT_ID
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    script.src =
+      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
     script.async = true
     script.defer = true
     script.onload = () => resolve()
@@ -190,7 +192,7 @@ onMounted(async () => {
   try {
     await loadTurnstileScript()
     renderTurnstile()
-  } catch (error) {
+  } catch {
     feedbackMessage.value = 'Impossible de charger le captcha pour le moment.'
   }
 })
@@ -210,7 +212,8 @@ function handleSubmit() {
   }
 
   if (!window.turnstile || turnstileWidgetId.value === null) {
-    feedbackMessage.value = 'Captcha indisponible pour le moment. Merci de reessayer.'
+    feedbackMessage.value =
+      'Captcha indisponible pour le moment. Merci de reessayer.'
     return
   }
 

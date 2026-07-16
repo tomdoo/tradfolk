@@ -54,7 +54,7 @@ def _sign_payload(payload: dict[str, Any], salt: str) -> str:
     payload_part = _base64_encode(payload_bytes)
     digest = hmac.new(
         _secret_key_bytes(),
-        f"{salt}.{payload_part}".encode("utf-8"),
+        f"{salt}.{payload_part}".encode(),
         hashlib.sha256,
     ).digest()
     return f"{payload_part}.{_base64_encode(digest)}"
@@ -68,7 +68,7 @@ def _load_signed_payload(token: str, salt: str, max_age_seconds: int) -> dict[st
 
     expected_digest = hmac.new(
         _secret_key_bytes(),
-        f"{salt}.{payload_part}".encode("utf-8"),
+        f"{salt}.{payload_part}".encode(),
         hashlib.sha256,
     ).digest()
     try:
@@ -159,7 +159,9 @@ def html_feedback_page(
         "background:#fff6e8;color:#241b33;display:grid;place-items:center;min-height:100vh;"
         "padding:24px;}main{max-width:560px;background:#fffdf8;border:1px solid rgba(36,27,51,.12);"
         "border-radius:20px;padding:28px;box-shadow:0 20px 40px -24px rgba(36,27,51,.25);}"
-        "h1{margin:0 0 12px;font-size:28px;line-height:1.2;}p{margin:0;font-size:16px;line-height:1.6;color:#7c7189;}</style>"
+        "h1{margin:0 0 12px;font-size:28px;line-height:1.2;}"
+        "p{margin:0;font-size:16px;line-height:1.6;color:#7c7189;}"
+        "</style>"
         "</head><body><main>"
         f"<h1>{safe_title}</h1><p>{safe_message}</p>{button_html}"
         "</main></body></html>"
@@ -259,10 +261,10 @@ def build_validation_email(
         safe_image_url = escape(proposal_image_url)
         safe_label = escape(proposal_label)
         image_block = (
-            "<p style=\"margin:14px 0 10px;\">Apercu de l'image :</p>"
-            f"<p><img src=\"{safe_image_url}\" alt=\"Image pour {safe_label}\" "
-            "style=\"display:block;max-width:100%;width:auto;height:auto;"
-            "max-height:360px;border-radius:10px;border:1px solid rgba(36,27,51,.12);\" /></p>"
+            '<p style="margin:14px 0 10px;">Apercu de l\'image :</p>'
+            f'<p><img src="{safe_image_url}" alt="Image pour {safe_label}" '
+            'style="display:block;max-width:100%;width:auto;height:auto;'
+            'max-height:360px;border-radius:10px;border:1px solid rgba(36,27,51,.12);" /></p>'
         )
         image_text = f"Image: {proposal_image_url}\n"
 
@@ -298,16 +300,16 @@ def build_admin_activation_email(
         safe_image_url = escape(proposal_image_url)
         safe_label = escape(proposal_label)
         image_block = (
-            "<p style=\"margin:14px 0 10px;\">Image proposee :</p>"
-            f"<p><img src=\"{safe_image_url}\" alt=\"Image pour {safe_label}\" "
-            "style=\"display:block;max-width:100%;width:auto;height:auto;"
-            "max-height:360px;border-radius:10px;border:1px solid rgba(36,27,51,.12);\" /></p>"
+            '<p style="margin:14px 0 10px;">Image proposee :</p>'
+            f'<p><img src="{safe_image_url}" alt="Image pour {safe_label}" '
+            'style="display:block;max-width:100%;width:auto;height:auto;'
+            'max-height:360px;border-radius:10px;border:1px solid rgba(36,27,51,.12);" /></p>'
         )
         image_text = f"Image: {proposal_image_url}\n"
     else:
         image_block = (
-            "<p style=\"margin:14px 0 0;padding:10px 12px;border-radius:10px;"
-            "background:#fce8ce;color:#7c7189;font-size:14px;\">"
+            '<p style="margin:14px 0 0;padding:10px 12px;border-radius:10px;'
+            'background:#fce8ce;color:#7c7189;font-size:14px;">'
             "Aucune image fournie par l'utilisateur."
             "</p>"
         )

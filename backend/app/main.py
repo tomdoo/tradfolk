@@ -1,7 +1,7 @@
 import os
 import uuid
+from datetime import UTC, datetime
 from http import HTTPStatus
-from datetime import datetime, timezone
 
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
@@ -16,6 +16,7 @@ from werkzeug.exceptions import HTTPException
 from .db import SessionLocal
 from .models import Proposal, Vote, VoteValue
 from .proposal_workflow import (
+    TokenError,
     build_admin_activation_email,
     build_validation_email,
     get_api_base_url,
@@ -26,7 +27,6 @@ from .proposal_workflow import (
     send_brevo_email,
     sign_activation_token,
     sign_validation_token,
-    TokenError,
     verify_turnstile_token,
 )
 
@@ -355,7 +355,7 @@ def create_proposal():
                 html_content=html_content,
                 text_content=text_content,
             )
-        except Exception as error:
+        except Exception:
             app.logger.exception("Unable to send proposal validation email")
 
         session.commit()
@@ -392,7 +392,7 @@ def validate_proposal(token: str):
             ), HTTPStatus.NOT_FOUND
 
         if proposal.validated_at is None:
-            proposal.validated_at = datetime.now(timezone.utc)
+            proposal.validated_at = datetime.now(UTC)
             session.commit()
 
         admin_token = sign_activation_token(str(proposal.id))
@@ -417,7 +417,9 @@ def validate_proposal(token: str):
                 text_content=text_content,
             )
         except Exception:
-            app.logger.exception("Unable to send admin activation email for proposal %s", proposal.id)
+            app.logger.exception(
+                "Unable to send admin activation email for proposal %s", proposal.id
+            )
 
         return html_feedback_page(
             "Proposition validée",
