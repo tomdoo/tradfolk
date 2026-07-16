@@ -19,18 +19,52 @@
         telle qu’elle évolue au fil des passages.
       </p>
 
+      <p>Swipe honnête, débat éternel : à toi de voter !</p>
+
       <p>
-        Ce projet est aussi participatif : si tu veux proposer des idées,
-        signaler un bug ou contribuer au code, passe sur
-        <a
-          href="https://github.com/tomdoo/tradfolk"
-          target="_blank"
-          rel="noopener noreferrer"
-          >GitHub</a
-        >.
+        Ce projet existe grâce à la communauté. Si tu aimes l’idée, tu peux
+        aider de trois façons, simples et concrètes :
       </p>
 
-      <p>Swipe honnête, débat éternel : à toi de voter.</p>
+      <ul class="contrib-list">
+        <li>
+          <span class="contrib-label">💛 Financièrement</span>
+          <span class="contrib-text">
+            L’hébergement coûte 5,39&nbsp;€/mois et le nom de domaine
+            5,99&nbsp;€/an, soit environ <strong>70,67&nbsp;€/an</strong>.
+            Chaque soutien, même modeste, aide à garder le site en ligne et
+            libre d’accès. Pour le moment, tu peux remonter jusqu'à la
+            personne qui héberge le site pour s'arranger directement.
+          </span>
+        </li>
+        <li>
+          <span class="contrib-label">✍️ En proposant</span>
+          <span class="contrib-text">
+            Envoie-nous une nouvelle danse ou un nouvel air à ajouter : un
+            titre, un petit contexte, et une image si tu en as une. Envoie le
+            tout à
+            <a href="mailto:[email de contact]">[email ou formulaire]</a>.
+          </span>
+        </li>
+        <li>
+          <span class="contrib-label">🛠️ Sur GitHub</span>
+          <span class="contrib-text">
+            Idées, bugs, corrections, nouvelles fonctions : tout est bienvenu.
+            Passe sur
+            <a
+              href="https://github.com/tomdoo/tradfolk"
+              target="_blank"
+              rel="noopener noreferrer"
+              >GitHub</a
+            >.
+          </span>
+        </li>
+      </ul>
+
+      <p>
+        Merci de faire vivre ce débat avec nous. Ici, on ne cherche pas à
+        trancher une vérité : on cultive des points de vue.
+      </p>
 
       <div class="credit-line">ALORS, TRAD OU FOLK ?</div>
     </div>

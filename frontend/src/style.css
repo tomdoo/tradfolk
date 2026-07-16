@@ -795,6 +795,42 @@ select {
   color: var(--ink);
 }
 
+.contrib-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contrib-list li {
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.contrib-label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.contrib-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.contrib-text a {
+  color: var(--trad);
+  font-weight: 600;
+}
+
 .about-legend {
   display: flex;
   gap: 10px;
