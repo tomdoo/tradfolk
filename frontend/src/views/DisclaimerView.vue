@@ -43,7 +43,7 @@
             Envoie-nous une nouvelle danse ou un nouvel air à ajouter : un
             titre, un petit contexte, et une image si tu en as une. Envoie le
             tout à
-            <a href="mailto:[email de contact]">[email ou formulaire]</a>.
+            <RouterLink to="/propose">ce formulaire</RouterLink>.
           </span>
         </li>
         <li>
@@ -70,3 +70,7 @@
     </div>
   </section>
 </template>
+
+<script setup>
+import { RouterLink } from 'vue-router'
+</script>

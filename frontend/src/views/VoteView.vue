@@ -83,6 +83,9 @@
           Tu as voté sur toutes celles du moment. Reviens un peu plus tard pour
           une nouvelle passe.
         </p>
+        <RouterLink class="next-btn next-btn--ghost" to="/propose"
+          >Proposer une entree</RouterLink
+        >
         <RouterLink class="next-btn" to="/results"
           >Voir les résultats</RouterLink
         >

@@ -1,0 +1,225 @@
+<template>
+  <section class="screen screen--proposal active">
+    <div class="proposal-scroll">
+      <div class="proposal-hero">
+        <h2>Envoyer une proposition</h2>
+        <p>
+          Remplis ce formulaire pour soumettre une nouvelle proposition. Elle sera relue, validée et publiée bientôt !
+        </p>
+      </div>
+
+      <form class="proposal-form" @submit.prevent="handleSubmit">
+        <label class="proposal-field">
+          <span>Email</span>
+          <input
+            v-model.trim="form.email"
+            type="email"
+            name="email"
+            autocomplete="email"
+            placeholder="toi@exemple.fr"
+            required
+          />
+        </label>
+
+        <label class="proposal-field">
+          <span>Nom</span>
+          <input
+            v-model.trim="form.name"
+            type="text"
+            name="name"
+            autocomplete="name"
+            placeholder="Ton nom"
+            required
+          />
+        </label>
+
+        <label class="proposal-field">
+          <span>Proposition</span>
+          <textarea
+            v-model.trim="form.proposal"
+            name="proposal"
+            rows="4"
+            placeholder="Exemple: Avoir chaud en été"
+            required
+          ></textarea>
+        </label>
+
+        <label class="proposal-field">
+          <span>URL de l'image (optionnel)</span>
+          <input
+            v-model.trim="form.imageUrl"
+            type="url"
+            name="imageUrl"
+            inputmode="url"
+            placeholder="https://..."
+          />
+        </label>
+
+        <p
+          v-if="feedbackMessage"
+          class="proposal-feedback"
+          role="status"
+          aria-live="polite"
+        >
+          {{ feedbackMessage }}
+        </p>
+
+        <button
+          type="submit"
+          class="next-btn proposal-submit-btn"
+          :disabled="!canSubmit"
+        >
+          Envoyer la proposition
+        </button>
+
+        <div
+          v-if="hasSiteKey"
+          ref="turnstileContainer"
+          class="proposal-captcha proposal-captcha--invisible"
+          aria-hidden="true"
+        ></div>
+      </form>
+    </div>
+  </section>
+</template>
+
+<script setup>
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+
+const TURNSTILE_SCRIPT_ID = 'cf-turnstile-script'
+const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
+const hasSiteKey = computed(() => Boolean(siteKey))
+
+const form = reactive({
+  email: '',
+  name: '',
+  proposal: '',
+  imageUrl: '',
+})
+
+const feedbackMessage = ref('')
+const turnstileContainer = ref(null)
+const turnstileWidgetId = ref(null)
+const captchaToken = ref('')
+const captchaPending = ref(false)
+const pendingSubmit = ref(false)
+
+const canSubmit = computed(() => hasSiteKey.value && !captchaPending.value)
+
+function loadTurnstileScript() {
+  if (window.turnstile) {
+    return Promise.resolve()
+  }
+
+  return new Promise((resolve, reject) => {
+    const existingScript = document.getElementById(TURNSTILE_SCRIPT_ID)
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(), { once: true })
+      existingScript.addEventListener(
+        'error',
+        () => reject(new Error('Impossible de charger Turnstile')),
+        { once: true }
+      )
+      return
+    }
+
+    const script = document.createElement('script')
+    script.id = TURNSTILE_SCRIPT_ID
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Impossible de charger Turnstile'))
+    document.head.appendChild(script)
+  })
+}
+
+function renderTurnstile() {
+  if (!hasSiteKey.value || !turnstileContainer.value || !window.turnstile) {
+    return
+  }
+  if (turnstileWidgetId.value !== null) {
+    return
+  }
+
+  turnstileWidgetId.value = window.turnstile.render(turnstileContainer.value, {
+    sitekey: siteKey,
+    size: 'invisible',
+    execution: 'execute',
+    callback: (token) => {
+      captchaToken.value = token
+      captchaPending.value = false
+      feedbackMessage.value = ''
+      if (pendingSubmit.value) {
+        pendingSubmit.value = false
+        completeSubmit()
+      }
+    },
+    'expired-callback': () => {
+      captchaToken.value = ''
+    },
+    'error-callback': () => {
+      captchaToken.value = ''
+      captchaPending.value = false
+      pendingSubmit.value = false
+      feedbackMessage.value = 'Le captcha a echoue. Merci de reessayer.'
+    },
+  })
+}
+
+onMounted(async () => {
+  if (!hasSiteKey.value) {
+    return
+  }
+  try {
+    await loadTurnstileScript()
+    renderTurnstile()
+  } catch (error) {
+    feedbackMessage.value = 'Impossible de charger le captcha pour le moment.'
+  }
+})
+
+onBeforeUnmount(() => {
+  if (turnstileWidgetId.value !== null && window.turnstile) {
+    window.turnstile.remove(turnstileWidgetId.value)
+    turnstileWidgetId.value = null
+  }
+})
+
+function handleSubmit() {
+  if (!hasSiteKey.value) {
+    feedbackMessage.value =
+      'Captcha non configure: definir VITE_TURNSTILE_SITE_KEY pour activer la soumission.'
+    return
+  }
+
+  if (!window.turnstile || turnstileWidgetId.value === null) {
+    feedbackMessage.value = 'Captcha indisponible pour le moment. Merci de reessayer.'
+    return
+  }
+
+  if (captchaPending.value) return
+
+  pendingSubmit.value = true
+  captchaPending.value = true
+  captchaToken.value = ''
+  feedbackMessage.value = ''
+  window.turnstile.execute(turnstileWidgetId.value)
+}
+
+function completeSubmit() {
+  if (!captchaToken.value) {
+    feedbackMessage.value = 'Validation captcha invalide. Merci de reessayer.'
+    return
+  }
+
+  feedbackMessage.value =
+    'Parfait, les champs sont bien remplis. Etape suivante: brancher la soumission serveur.'
+
+  if (turnstileWidgetId.value !== null && window.turnstile) {
+    window.turnstile.reset(turnstileWidgetId.value)
+    captchaToken.value = ''
+    captchaPending.value = false
+  }
+}
+</script>

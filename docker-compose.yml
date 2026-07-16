@@ -66,6 +66,7 @@ services:
       target: prod
       args:
         VITE_API_URL: ${API_URL}
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY}
     labels:
       - traefik.enable=true
       - traefik.docker.network=web
