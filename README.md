@@ -78,6 +78,7 @@ Variables principales dans [.env.dist](.env.dist):
 - API_URL: URL backend utilisée au build du frontend
 - POSTGRES_*: paramètres de connexion DB
 - SECRET_KEY: clé de signature backend (cookies d'origine)
+- BREVO_*: envoi des emails de validation et d'activation des propositions
 - CORS_ORIGINS: unique origine autorisée côté API (mettre l'URL de l'app)
 - TRAEFIK_*: ports et règles d'exposition locale
 

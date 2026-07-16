@@ -1,6 +1,7 @@
 services:
   backend:
     entrypoint: ["sh", "/app/scripts/entrypoint.sh"]
+    env_file: .env
     environment:
       APP_ENV: dev
       GUNICORN_WORKERS: 1

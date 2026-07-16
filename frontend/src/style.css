@@ -926,6 +926,33 @@ select {
   gap: 12px;
 }
 
+.proposal-success {
+  margin-top: 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  padding: 16px;
+}
+
+.proposal-success h3 {
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.proposal-success p {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.proposal-success .next-btn {
+  width: 100%;
+  margin-top: 14px;
+}
+
 .proposal-field {
   display: flex;
   flex-direction: column;

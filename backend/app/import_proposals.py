@@ -79,6 +79,9 @@ def run():
                         id=item.id,
                         libelle=item.label,
                         image=item.image,
+                        user_email=None,
+                        user_name=None,
+                        validated_at=None,
                         active=item.active,
                     )
                 )

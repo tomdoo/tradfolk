@@ -19,7 +19,10 @@ def upgrade():
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("libelle", sa.String(length=255), nullable=False),
         sa.Column("image", sa.String(length=1024), nullable=False),
-        sa.Column("active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column("user_email", sa.String(length=255), nullable=True),
+        sa.Column("user_name", sa.String(length=255), nullable=True),
+        sa.Column("validated_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("active", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),

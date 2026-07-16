@@ -1,19 +1,34 @@
 import os
 import uuid
 from http import HTTPStatus
+from datetime import datetime, timezone
 
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from itsdangerous import BadSignature, URLSafeSerializer
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException
 
 from .db import SessionLocal
 from .models import Proposal, Vote, VoteValue
+from .proposal_workflow import (
+    build_admin_activation_email,
+    build_validation_email,
+    get_api_base_url,
+    get_public_base_url,
+    html_feedback_page,
+    load_activation_token,
+    load_validation_token,
+    send_brevo_email,
+    sign_activation_token,
+    sign_validation_token,
+    TokenError,
+    verify_turnstile_token,
+)
 
 app = Flask(__name__)
 secret_key = os.getenv("SECRET_KEY", "change-me")
@@ -60,8 +75,54 @@ class VotePayload(BaseModel):
     value: VoteValue
 
 
+class ProposalSubmissionPayload(BaseModel):
+    email: str = Field(min_length=3, max_length=255)
+    name: str = Field(min_length=1, max_length=255)
+    proposal: str = Field(min_length=1, max_length=255)
+    image_url: str | None = Field(default=None, max_length=1024, alias="imageUrl")
+    turnstile_token: str = Field(min_length=1, alias="turnstileToken")
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        value = value.strip()
+        if "@" not in value or value.startswith("@") or value.endswith("@"):
+            raise ValueError("Adresse email invalide")
+        return value
+
+    @field_validator("name", "proposal")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Champ requis")
+        return value
+
+    @field_validator("image_url")
+    @classmethod
+    def normalize_image_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 def json_error(message: str, status: HTTPStatus):
     return jsonify({"error": message}), status
+
+
+def proposal_to_json(proposal: Proposal) -> dict[str, str | bool | None]:
+    return {
+        "id": str(proposal.id),
+        "label": proposal.libelle,
+        "image": proposal.image,
+        "user_email": proposal.user_email,
+        "user_name": proposal.user_name,
+        "validated_at": proposal.validated_at.isoformat() if proposal.validated_at else None,
+        "active": proposal.active,
+    }
 
 
 def deserialize_origin(raw_cookie: str | None) -> str | None:
@@ -251,6 +312,160 @@ def create_vote():
                     "folk": round((folk / total) * 100, 2) if total else 0,
                 },
             }
+        )
+
+
+@app.post("/proposals")
+@limiter.limit("20 per minute")
+def create_proposal():
+    payload = ProposalSubmissionPayload.model_validate(request.get_json(silent=True) or {})
+    try:
+        verify_turnstile_token(payload.turnstile_token, request.remote_addr)
+    except RuntimeError:
+        return json_error("Captcha invalide ou expiré", HTTPStatus.BAD_REQUEST)
+
+    with SessionLocal() as session:
+        proposal = Proposal(
+            id=uuid.uuid4(),
+            libelle=payload.proposal,
+            image=payload.image_url or "",
+            user_email=payload.email,
+            user_name=payload.name,
+            validated_at=None,
+            active=False,
+        )
+        session.add(proposal)
+        session.flush()
+
+        validation_token = sign_validation_token(str(proposal.id))
+        validation_url = f"{get_api_base_url().rstrip('/')}/proposals/validate/{validation_token}"
+        subject, html_content, text_content = build_validation_email(
+            proposal_id=str(proposal.id),
+            proposal_label=proposal.libelle,
+            proposal_image_url=proposal.image or None,
+            user_name=proposal.user_name or proposal.user_email or "",
+            validation_url=validation_url,
+        )
+
+        try:
+            send_brevo_email(
+                recipient_email=proposal.user_email or payload.email,
+                recipient_name=proposal.user_name or payload.name,
+                subject=subject,
+                html_content=html_content,
+                text_content=text_content,
+            )
+        except Exception as error:
+            app.logger.exception("Unable to send proposal validation email")
+
+        session.commit()
+
+        return jsonify(
+            {
+                "status": "pending_validation",
+                "message": "Ta proposition a bien été reçue. Vérifie ton email pour la valider.",
+                "proposal": proposal_to_json(proposal),
+            }
+        ), HTTPStatus.ACCEPTED
+
+
+@app.get("/proposals/validate/<token>")
+def validate_proposal(token: str):
+    try:
+        proposal_id = load_validation_token(token)
+    except TokenError:
+        return html_feedback_page(
+            "Lien invalide",
+            "Le lien de validation est invalide ou a expiré.",
+            get_public_base_url(),
+            "Retour au site",
+        ), HTTPStatus.BAD_REQUEST
+
+    with SessionLocal() as session:
+        proposal = session.get(Proposal, uuid.UUID(proposal_id))
+        if not proposal:
+            return html_feedback_page(
+                "Proposition introuvable",
+                "Cette proposition n'existe plus.",
+                get_public_base_url(),
+                "Retour au site",
+            ), HTTPStatus.NOT_FOUND
+
+        if proposal.validated_at is None:
+            proposal.validated_at = datetime.now(timezone.utc)
+            session.commit()
+
+        admin_token = sign_activation_token(str(proposal.id))
+        admin_url = f"{get_api_base_url().rstrip('/')}/admin/proposals/activate/{admin_token}"
+        subject, html_content, text_content = build_admin_activation_email(
+            proposal_id=str(proposal.id),
+            proposal_label=proposal.libelle,
+            proposal_image_url=proposal.image or None,
+            user_name=proposal.user_name or proposal.user_email or "",
+            user_email=proposal.user_email or "",
+            activation_url=admin_url,
+        )
+
+        try:
+            send_brevo_email(
+                recipient_email=os.getenv("BREVO_ADMIN_EMAIL")
+                or os.getenv("TRAEFIK_ACME_EMAIL")
+                or "admin@tradfolk.local",
+                recipient_name=os.getenv("BREVO_ADMIN_NAME") or "Admin Tradfolk",
+                subject=subject,
+                html_content=html_content,
+                text_content=text_content,
+            )
+        except Exception:
+            app.logger.exception("Unable to send admin activation email for proposal %s", proposal.id)
+
+        return html_feedback_page(
+            "Proposition validée",
+            "Merci. Ta proposition est maintenant en cours de modération.",
+            get_public_base_url(),
+            "Retour au site",
+        )
+
+
+@app.get("/admin/proposals/activate/<token>")
+def activate_proposal(token: str):
+    try:
+        proposal_id = load_activation_token(token)
+    except TokenError:
+        return html_feedback_page(
+            "Lien invalide",
+            "Le lien d'activation est invalide ou a expiré.",
+            get_public_base_url(),
+            "Retour au site",
+        ), HTTPStatus.BAD_REQUEST
+
+    with SessionLocal() as session:
+        proposal = session.get(Proposal, uuid.UUID(proposal_id))
+        if not proposal:
+            return html_feedback_page(
+                "Proposition introuvable",
+                "Cette proposition n'existe plus.",
+                get_public_base_url(),
+                "Retour au site",
+            ), HTTPStatus.NOT_FOUND
+
+        if proposal.validated_at is None:
+            return html_feedback_page(
+                "Proposition non validée",
+                "Cette proposition doit d'abord être validée par son auteur.",
+                get_public_base_url(),
+                "Retour au site",
+            ), HTTPStatus.BAD_REQUEST
+
+        if not proposal.active:
+            proposal.active = True
+            session.commit()
+
+        return html_feedback_page(
+            "Proposition activée",
+            "La proposition est maintenant visible sur le site.",
+            get_public_base_url(),
+            "Retour au site",
         )
 
 

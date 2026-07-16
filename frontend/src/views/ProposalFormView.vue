@@ -4,11 +4,19 @@
       <div class="proposal-hero">
         <h2>Envoyer une proposition</h2>
         <p>
-          Remplis ce formulaire pour soumettre une nouvelle proposition. Elle sera relue, validée et publiée bientôt !
+          Remplis ce formulaire pour soumettre une nouvelle proposition. Une fois envoyée il te sera demandé de la valider par email.
         </p>
       </div>
 
-      <form class="proposal-form" @submit.prevent="handleSubmit">
+      <div v-if="submissionDone" class="proposal-success">
+        <h3>Proposition envoyee</h3>
+        <p>{{ successMessage }}</p>
+        <button type="button" class="next-btn" @click="resetFormFlow">
+          Envoyer une nouvelle proposition
+        </button>
+      </div>
+
+      <form v-else class="proposal-form" @submit.prevent="handleSubmit">
         <label class="proposal-field">
           <span>Email</span>
           <input
@@ -85,6 +93,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { api, getApiErrorMessage } from '../api'
 
 const TURNSTILE_SCRIPT_ID = 'cf-turnstile-script'
 const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
@@ -98,13 +107,18 @@ const form = reactive({
 })
 
 const feedbackMessage = ref('')
+const successMessage = ref('')
+const submissionDone = ref(false)
+const submitting = ref(false)
 const turnstileContainer = ref(null)
 const turnstileWidgetId = ref(null)
 const captchaToken = ref('')
 const captchaPending = ref(false)
 const pendingSubmit = ref(false)
 
-const canSubmit = computed(() => hasSiteKey.value && !captchaPending.value)
+const canSubmit = computed(
+  () => hasSiteKey.value && !captchaPending.value && !submitting.value
+)
 
 function loadTurnstileScript() {
   if (window.turnstile) {
@@ -157,6 +171,8 @@ function renderTurnstile() {
     },
     'expired-callback': () => {
       captchaToken.value = ''
+      captchaPending.value = false
+      pendingSubmit.value = false
     },
     'error-callback': () => {
       captchaToken.value = ''
@@ -207,19 +223,56 @@ function handleSubmit() {
   window.turnstile.execute(turnstileWidgetId.value)
 }
 
-function completeSubmit() {
+async function completeSubmit() {
   if (!captchaToken.value) {
     feedbackMessage.value = 'Validation captcha invalide. Merci de reessayer.'
     return
   }
 
-  feedbackMessage.value =
-    'Parfait, les champs sont bien remplis. Etape suivante: brancher la soumission serveur.'
+  submitting.value = true
+  try {
+    const { data } = await api.post('/proposals', {
+      email: form.email,
+      name: form.name,
+      proposal: form.proposal,
+      imageUrl: form.imageUrl || null,
+      turnstileToken: captchaToken.value,
+    })
+
+    successMessage.value =
+      data?.message ||
+      'Ta proposition a bien été reçue. Vérifie tes emails pour la valider.'
+    submissionDone.value = true
+    feedbackMessage.value = ''
+
+    form.email = ''
+    form.name = ''
+    form.proposal = ''
+    form.imageUrl = ''
+  } catch (error) {
+    feedbackMessage.value = getApiErrorMessage(
+      error,
+      "Impossible d'envoyer la proposition pour le moment."
+    )
+  } finally {
+    submitting.value = false
+    pendingSubmit.value = false
+
+    if (turnstileWidgetId.value !== null && window.turnstile) {
+      window.turnstile.reset(turnstileWidgetId.value)
+    }
+    captchaToken.value = ''
+    captchaPending.value = false
+  }
+}
+
+function resetFormFlow() {
+  submissionDone.value = false
+  successMessage.value = ''
+  feedbackMessage.value = ''
 
   if (turnstileWidgetId.value !== null && window.turnstile) {
     window.turnstile.reset(turnstileWidgetId.value)
-    captchaToken.value = ''
-    captchaPending.value = false
   }
 }
 </script>
