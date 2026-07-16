@@ -106,7 +106,8 @@ const sortedItems = computed(() => {
 
 const totalVotes = computed(() => {
   return items.value.reduce((sum, item) => {
-    const itemTotal = item.counts?.total ?? item.counts?.trad + item.counts?.folk
+    const itemTotal =
+      item.counts?.total ?? item.counts?.trad + item.counts?.folk
     return sum + (Number.isFinite(itemTotal) ? itemTotal : 0)
   }, 0)
 })
