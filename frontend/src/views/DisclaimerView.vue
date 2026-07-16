@@ -40,9 +40,8 @@
         <li>
           <span class="contrib-label">✍️ En proposant</span>
           <span class="contrib-text">
-            Envoie-nous une nouvelle danse ou un nouvel air à ajouter : un
-            titre, un petit contexte, et une image si tu en as une. Envoie le
-            tout à
+            Envoie-nous une proposition à ajouter : un titre et une image si tu
+            en as une. Envoie le tout via
             <RouterLink to="/propose">ce formulaire</RouterLink>.
           </span>
         </li>
