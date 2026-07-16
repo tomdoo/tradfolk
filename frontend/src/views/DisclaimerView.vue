@@ -33,8 +33,8 @@
             L’hébergement coûte 5,39&nbsp;€/mois et le nom de domaine
             5,99&nbsp;€/an, soit environ <strong>70,67&nbsp;€/an</strong>.
             Chaque soutien, même modeste, aide à garder le site en ligne et
-            libre d’accès. Pour le moment, tu peux remonter jusqu'à la
-            personne qui héberge le site pour s'arranger directement.
+            libre d’accès. Pour le moment, tu peux remonter jusqu'à la personne
+            qui héberge le site pour s'arranger directement.
           </span>
         </li>
         <li>
