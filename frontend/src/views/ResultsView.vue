@@ -1,7 +1,10 @@
 <template>
   <section class="screen screen--results active">
     <div class="results-header-row">
-      <div class="sub-pill">{{ items.length }} propositions</div>
+      <div class="sub-pill">
+        <div>{{ items.length }} propositions</div>
+        <div>{{ totalVotes }} {{ totalVotes > 1 ? 'votes' : 'vote' }}</div>
+      </div>
       <select v-model="sortMode" class="sort-select">
         <option value="order">Ordre alphabétique</option>
         <option value="trad">Plutôt Trad</option>
@@ -99,6 +102,13 @@ const sortedItems = computed(() => {
     )
   }
   return list
+})
+
+const totalVotes = computed(() => {
+  return items.value.reduce((sum, item) => {
+    const itemTotal = item.counts?.total ?? item.counts?.trad + item.counts?.folk
+    return sum + (Number.isFinite(itemTotal) ? itemTotal : 0)
+  }, 0)
 })
 
 function normalizeResult(raw) {
