@@ -7,8 +7,8 @@
       </div>
       <select v-model="sortMode" class="sort-select">
         <option value="order">Ordre alphabétique</option>
-        <option value="trad">Plutôt Trad</option>
-        <option value="folk">Plutôt Folk</option>
+        <option value="trad">Plutôt trad</option>
+        <option value="folk">Plutôt folk</option>
       </select>
     </div>
 
@@ -127,9 +127,12 @@ function winnerClass(item) {
 }
 
 function winnerLabel(item) {
+  if (item.percentages.trad === item.percentages.folk) {
+    return 'Plutôt consensuel'
+  }
   return item.percentages.trad >= item.percentages.folk
-    ? 'Plutôt Trad'
-    : 'Plutôt Folk'
+    ? 'Plutôt trad'
+    : 'Plutôt folk'
 }
 
 onMounted(async () => {
