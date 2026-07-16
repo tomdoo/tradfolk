@@ -123,16 +123,19 @@ function normalizeResult(raw) {
 }
 
 function winnerClass(item) {
-  return item.percentages.trad >= item.percentages.folk ? 'trad' : 'folk'
+  return item.percentages.trad === item.percentages.folk
+    ? 'consensus'
+    : item.percentages.trad >= item.percentages.folk
+      ? 'trad'
+      : 'folk'
 }
 
 function winnerLabel(item) {
-  if (item.percentages.trad === item.percentages.folk) {
-    return 'Plutôt consensuel'
-  }
-  return item.percentages.trad >= item.percentages.folk
-    ? 'Plutôt trad'
-    : 'Plutôt folk'
+  return item.percentages.trad === item.percentages.folk
+    ? 'Plutôt consensuel'
+    : item.percentages.trad >= item.percentages.folk
+      ? 'Plutôt trad'
+      : 'Plutôt folk'
 }
 
 onMounted(async () => {

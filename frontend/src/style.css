@@ -710,6 +710,11 @@ select {
   flex-shrink: 0;
 }
 
+.result-winner.consensus {
+  background: var(--cream);
+  color: var(--ink-soft);
+}
+
 .result-winner.trad {
   background: var(--trad-tint);
   color: var(--trad);
