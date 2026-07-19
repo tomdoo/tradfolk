@@ -491,6 +491,7 @@ def get_results():
                 ).label("folk"),
             )
             .outerjoin(Vote, Vote.id_proposal == Proposal.id)
+            .where(Proposal.active.is_(True))
             .group_by(Proposal.id)
             .order_by(Proposal.libelle.asc())
         ).all()
