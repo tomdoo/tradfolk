@@ -65,6 +65,18 @@
         trancher une vérité : on cultive des points de vue.
       </p>
 
+      <p>
+        🍪 Cette application utilise un cookie. Un seul. Il est bon, plein de
+        beurre et retient juste tes votes. Pas de pub, pas de tracking, pas de
+        dark pattern, pas de mystère.
+      </p>
+
+      <p>
+        🕋 Les données sont hébergées en France, dans un datacenter du côté de
+        Strasbourg. Il n'est pas prévu d'utiliser les données personnelles à
+        d'autres fins que de la modération de contenu.
+      </p>
+
       <div class="credit-line">ALORS, TRAD OU FOLK ?</div>
     </div>
   </section>

@@ -5,10 +5,10 @@
         <h2>Envoyer une proposition</h2>
         <p>
           Remplis ce formulaire pour soumettre une nouvelle proposition. Une
-          fois envoyée, il te sera demandé de la valider par email. Ton nom et
-          ton email ne seront pas partagés publiquement ni utilisés à d'autres
-          fins, mais ils sont nécessaires pour que nous puissions te contacter
-          si besoin.
+          fois envoyée, tu devras la valider par email. Ton nom et ton email ne
+          seront pas partagés publiquement ni utilisés à d'autres fins : ils
+          servent uniquement à valider ta proposition et à te contacter si
+          besoin.
         </p>
       </div>
 
