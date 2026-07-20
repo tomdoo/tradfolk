@@ -72,6 +72,7 @@
           <button
             type="button"
             class="next-btn next-btn--ghost proposal-modify-btn"
+            :disabled="captchaPending || submitting"
             @click="backToForm"
           >
             Modifier
