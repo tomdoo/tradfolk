@@ -1012,6 +1012,47 @@ select {
   margin-top: 4px;
 }
 
+.proposal-verify {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.proposal-preview-card {
+  background: var(--paper);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 18px 30px -18px rgba(36, 27, 51, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 30px;
+}
+
+.proposal-preview-card h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: clamp(24px, 6.6vw, 31px);
+  line-height: 1.14;
+  margin: 0;
+  letter-spacing: -0.01em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: balance;
+}
+
+.proposal-preview-card h2.card-title--long {
+  font-size: clamp(21px, 5.6vw, 27px);
+}
+
+.proposal-preview-card h2.card-title--xlong {
+  font-size: clamp(18px, 4.8vw, 23px);
+  line-height: 1.2;
+}
+
 .proposal-captcha-wrap {
   display: flex;
   flex-direction: column;
