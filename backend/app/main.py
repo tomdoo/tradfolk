@@ -343,7 +343,7 @@ def create_proposal():
     except RuntimeError:
         return json_error("Captcha invalide ou expiré", HTTPStatus.BAD_REQUEST)
 
-    image_path = ""
+    image_path = None
     image_file = request.files.get("image")
     if image_file and image_file.filename:
         try:
