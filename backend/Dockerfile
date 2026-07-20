@@ -14,6 +14,7 @@ COPY . .
 RUN chmod +x /app/scripts/entrypoint.sh
 
 RUN useradd --create-home --shell /bin/bash appuser \
+    && mkdir -p /app/uploads/proposals \
     && chown -R appuser:appuser /app
 
 USER appuser

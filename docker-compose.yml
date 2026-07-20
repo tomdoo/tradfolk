@@ -45,6 +45,7 @@ services:
         condition: service_healthy
     volumes:
       - ./proposals.json:/app/data/proposals.json:ro
+      - uploads:/app/uploads
     labels:
       - traefik.enable=true
       - traefik.docker.network=web
@@ -89,3 +90,4 @@ networks:
 
 volumes:
   letsencrypt:
+  uploads:

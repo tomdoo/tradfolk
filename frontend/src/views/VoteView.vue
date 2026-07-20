@@ -190,7 +190,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import { api, getApiErrorMessage } from '../api'
+import { api, API_BASE, getApiErrorMessage } from '../api'
 import { pickLoadingPhrase, waitForMinimumDelay } from '../loadingState'
 
 const loading = ref(false)
@@ -279,11 +279,17 @@ function wait(ms) {
   })
 }
 
+function resolveImageUrl(url) {
+  if (!url) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return `${API_BASE.replace(/\/$/, '')}${url}`
+}
+
 function normalizeProposal(raw) {
   return {
     id: raw.proposal_id || raw.id,
     label: raw.label,
-    image: raw.image,
+    image: resolveImageUrl(raw.image),
   }
 }
 

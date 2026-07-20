@@ -2,8 +2,9 @@ import os
 import uuid
 from datetime import UTC, datetime
 from http import HTTPStatus
+from pathlib import Path
 
-from flask import Flask, g, jsonify, request
+from flask import Flask, g, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -14,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException
 
 from .db import SessionLocal
+from .image_utils import ImageUploadError, save_proposal_image
 from .models import Proposal, Vote, VoteValue
 from .proposal_workflow import (
     TokenError,
@@ -79,7 +81,6 @@ class ProposalSubmissionPayload(BaseModel):
     email: str = Field(min_length=3, max_length=255)
     name: str = Field(min_length=1, max_length=255)
     proposal: str = Field(min_length=1, max_length=255)
-    image_url: str | None = Field(default=None, max_length=1024, alias="imageUrl")
     turnstile_token: str = Field(min_length=1, alias="turnstileToken")
 
     @field_validator("email")
@@ -97,14 +98,6 @@ class ProposalSubmissionPayload(BaseModel):
         if not value:
             raise ValueError("Champ requis")
         return value
-
-    @field_validator("image_url")
-    @classmethod
-    def normalize_image_url(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        value = value.strip()
-        return value or None
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -199,6 +192,25 @@ def handle_unexpected_error(error: Exception):
         return json_error(error.description, HTTPStatus(error.code))
     app.logger.exception("Unhandled error", exc_info=error)
     return json_error("Erreur serveur", HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+def resolve_image_url(image: str | None) -> str | None:
+    """Return an absolute URL for *image*.
+
+    Leaves existing http/https URLs unchanged; prepends the API base URL for
+    relative paths (e.g. ``/uploads/proposals/<uuid>.webp``).
+    """
+    if not image:
+        return None
+    if image.startswith(("http://", "https://")):
+        return image
+    return f"{get_api_base_url().rstrip('/')}{image}"
+
+
+@app.get("/uploads/<path:filename>")
+def serve_upload(filename: str):
+    upload_dir = Path(os.getenv("UPLOAD_DIR", "/app/uploads")).resolve()
+    return send_from_directory(upload_dir, filename)
 
 
 @app.get("/health")
@@ -318,17 +330,32 @@ def create_vote():
 @app.post("/proposals")
 @limiter.limit("20 per minute")
 def create_proposal():
-    payload = ProposalSubmissionPayload.model_validate(request.get_json(silent=True) or {})
+    payload = ProposalSubmissionPayload.model_validate(
+        {
+            "email": request.form.get("email", ""),
+            "name": request.form.get("name", ""),
+            "proposal": request.form.get("proposal", ""),
+            "turnstileToken": request.form.get("turnstileToken", ""),
+        }
+    )
     try:
         verify_turnstile_token(payload.turnstile_token, request.remote_addr)
     except RuntimeError:
         return json_error("Captcha invalide ou expiré", HTTPStatus.BAD_REQUEST)
 
+    image_path = ""
+    image_file = request.files.get("image")
+    if image_file and image_file.filename:
+        try:
+            image_path = save_proposal_image(image_file)
+        except ImageUploadError as exc:
+            return json_error(str(exc), HTTPStatus.BAD_REQUEST)
+
     with SessionLocal() as session:
         proposal = Proposal(
             id=uuid.uuid4(),
             libelle=payload.proposal,
-            image=payload.image_url or "",
+            image=image_path,
             user_email=payload.email,
             user_name=payload.name,
             validated_at=None,
@@ -342,7 +369,7 @@ def create_proposal():
         subject, html_content, text_content = build_validation_email(
             proposal_id=str(proposal.id),
             proposal_label=proposal.libelle,
-            proposal_image_url=proposal.image or None,
+            proposal_image_url=resolve_image_url(proposal.image),
             user_name=proposal.user_name or proposal.user_email or "",
             validation_url=validation_url,
         )
@@ -400,7 +427,7 @@ def validate_proposal(token: str):
         subject, html_content, text_content = build_admin_activation_email(
             proposal_id=str(proposal.id),
             proposal_label=proposal.libelle,
-            proposal_image_url=proposal.image or None,
+            proposal_image_url=resolve_image_url(proposal.image),
             user_name=proposal.user_name or proposal.user_email or "",
             user_email=proposal.user_email or "",
             activation_url=admin_url,
