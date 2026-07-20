@@ -20,78 +20,145 @@
         </button>
       </div>
 
-      <form v-else class="proposal-form" @submit.prevent="handleSubmit">
-        <label class="proposal-field">
-          <span>Email</span>
-          <input
-            v-model.trim="form.email"
-            type="email"
-            name="email"
-            autocomplete="email"
-            placeholder="toi@exemple.fr"
-            required
-          />
-        </label>
+      <div v-if="!submissionDone">
+        <div v-show="verifying" class="proposal-verify">
+          <div class="proposal-preview-card">
+            <div class="card-media card-media--image">
+              <img
+                v-if="imagePreviewUrl"
+                :src="imagePreviewUrl"
+                :alt="form.proposal"
+              />
+              <div v-else class="card-media__fallback" aria-hidden="true">
+                <svg
+                  viewBox="0 0 64 64"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="10" y="14" width="44" height="36" rx="6" />
+                  <path d="M18 42l10-11 8 8 6-6 4 4" />
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="3"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </svg>
+                <span>Pas d'image</span>
+              </div>
+            </div>
+            <h2 :class="cardTitleClass">{{ form.proposal }}</h2>
+          </div>
 
-        <label class="proposal-field">
-          <span>Nom</span>
-          <input
-            v-model.trim="form.name"
-            type="text"
-            name="name"
-            autocomplete="name"
-            placeholder="Ton nom"
-            required
-          />
-        </label>
+          <p
+            v-if="feedbackMessage"
+            class="proposal-feedback"
+            role="status"
+            aria-live="polite"
+          >
+            {{ feedbackMessage }}
+          </p>
 
-        <label class="proposal-field">
-          <span>Proposition</span>
-          <textarea
-            v-model.trim="form.proposal"
-            name="proposal"
-            rows="4"
-            placeholder="Exemple: Avoir chaud en été"
-            required
-          ></textarea>
-        </label>
+          <button
+            type="button"
+            class="next-btn proposal-submit-btn"
+            :disabled="!canSubmit"
+            @click="doActualSubmit"
+          >
+            Envoyer la proposition
+          </button>
 
-        <label class="proposal-field">
-          <span>Image</span>
-          <input
-            ref="imageInput"
-            type="file"
-            name="image"
-            accept="image/*"
-            required
-            @change="handleImageFile"
-          />
-        </label>
+          <button
+            type="button"
+            class="next-btn next-btn--ghost proposal-modify-btn"
+            :disabled="captchaPending || submitting"
+            @click="backToForm"
+          >
+            Modifier
+          </button>
+        </div>
 
-        <p
-          v-if="feedbackMessage"
-          class="proposal-feedback"
-          role="status"
-          aria-live="polite"
+        <form
+          v-show="!verifying"
+          class="proposal-form"
+          @submit.prevent="handleSubmit"
         >
-          {{ feedbackMessage }}
-        </p>
+          <label class="proposal-field">
+            <span>Email</span>
+            <input
+              v-model.trim="form.email"
+              type="email"
+              name="email"
+              autocomplete="email"
+              placeholder="toi@exemple.fr"
+              required
+            />
+          </label>
 
-        <button
-          type="submit"
-          class="next-btn proposal-submit-btn"
-          :disabled="!canSubmit"
-        >
-          Envoyer la proposition
-        </button>
+          <label class="proposal-field">
+            <span>Nom</span>
+            <input
+              v-model.trim="form.name"
+              type="text"
+              name="name"
+              autocomplete="name"
+              placeholder="Ton nom"
+              required
+            />
+          </label>
 
-        <div
-          v-if="hasSiteKey"
-          ref="turnstileContainer"
-          class="proposal-captcha proposal-captcha--invisible"
-          aria-hidden="true"
-        ></div>
-      </form>
+          <label class="proposal-field">
+            <span>Proposition</span>
+            <textarea
+              v-model.trim="form.proposal"
+              name="proposal"
+              rows="4"
+              placeholder="Exemple: Avoir chaud en été"
+              required
+            ></textarea>
+          </label>
+
+          <label class="proposal-field">
+            <span>Image</span>
+            <input
+              ref="imageInput"
+              type="file"
+              name="image"
+              accept="image/*"
+              required
+              @change="handleImageFile"
+            />
+          </label>
+
+          <p
+            v-if="feedbackMessage"
+            class="proposal-feedback"
+            role="status"
+            aria-live="polite"
+          >
+            {{ feedbackMessage }}
+          </p>
+
+          <button
+            type="submit"
+            class="next-btn proposal-submit-btn"
+            :disabled="submitting"
+          >
+            Vérifier
+          </button>
+        </form>
+      </div>
+
+      <div
+        v-if="hasSiteKey && !submissionDone"
+        ref="turnstileContainer"
+        class="proposal-captcha proposal-captcha--invisible"
+        aria-hidden="true"
+      ></div>
     </div>
   </section>
 </template>
@@ -112,11 +179,13 @@ const form = reactive({
 
 const imageFile = ref(null)
 const imageInput = ref(null)
+const imagePreviewUrl = ref('')
 
 const feedbackMessage = ref('')
 const successMessage = ref('')
 const submissionDone = ref(false)
 const submitting = ref(false)
+const verifying = ref(false)
 const turnstileContainer = ref(null)
 const turnstileWidgetId = ref(null)
 const captchaToken = ref('')
@@ -126,6 +195,13 @@ const pendingSubmit = ref(false)
 const canSubmit = computed(
   () => hasSiteKey.value && !captchaPending.value && !submitting.value
 )
+
+const cardTitleClass = computed(() => {
+  const labelLength = form.proposal?.length ?? 0
+  if (labelLength >= 70) return 'card-title--xlong'
+  if (labelLength >= 52) return 'card-title--long'
+  return ''
+})
 
 function loadTurnstileScript() {
   if (window.turnstile) {
@@ -208,6 +284,9 @@ onBeforeUnmount(() => {
     window.turnstile.remove(turnstileWidgetId.value)
     turnstileWidgetId.value = null
   }
+  if (imagePreviewUrl.value) {
+    URL.revokeObjectURL(imagePreviewUrl.value)
+  }
 })
 
 function handleImageFile(e) {
@@ -215,6 +294,22 @@ function handleImageFile(e) {
 }
 
 function handleSubmit() {
+  if (imagePreviewUrl.value) {
+    URL.revokeObjectURL(imagePreviewUrl.value)
+  }
+  imagePreviewUrl.value = imageFile.value
+    ? URL.createObjectURL(imageFile.value)
+    : ''
+  feedbackMessage.value = ''
+  verifying.value = true
+}
+
+function backToForm() {
+  verifying.value = false
+  feedbackMessage.value = ''
+}
+
+function doActualSubmit() {
   if (!hasSiteKey.value) {
     feedbackMessage.value =
       'Captcha non configure: definir VITE_TURNSTILE_SITE_KEY pour activer la soumission.'
@@ -259,7 +354,13 @@ async function completeSubmit() {
       data?.message ||
       'Ta proposition a bien été reçue. Vérifie tes emails pour la valider.'
     submissionDone.value = true
+    verifying.value = false
     feedbackMessage.value = ''
+
+    if (imagePreviewUrl.value) {
+      URL.revokeObjectURL(imagePreviewUrl.value)
+      imagePreviewUrl.value = ''
+    }
 
     form.email = ''
     form.name = ''
