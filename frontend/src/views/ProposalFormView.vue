@@ -5,12 +5,14 @@
         <h2>Envoyer une proposition</h2>
         <p>
           Remplis ce formulaire pour soumettre une nouvelle proposition. Une
-          fois envoyée il te sera demandé de la valider par email.
+          fois envoyée, il te sera demandé de la valider par email. Ton nom et
+          ton email ne seront pas partagés publiquement ni utilisés à d'autres fins,
+          mais ils sont nécessaires pour que nous puissions te contacter si besoin.
         </p>
       </div>
 
       <div v-if="submissionDone" class="proposal-success">
-        <h3>Proposition envoyee</h3>
+        <h3>Proposition envoyée</h3>
         <p>{{ successMessage }}</p>
         <button type="button" class="next-btn" @click="resetFormFlow">
           Envoyer une nouvelle proposition
@@ -183,7 +185,7 @@ function renderTurnstile() {
       captchaToken.value = ''
       captchaPending.value = false
       pendingSubmit.value = false
-      feedbackMessage.value = 'Le captcha a echoue. Merci de reessayer.'
+      feedbackMessage.value = 'Le captcha a échoué. Merci de réessayer.'
     },
   })
 }
@@ -220,7 +222,7 @@ function handleSubmit() {
 
   if (!window.turnstile || turnstileWidgetId.value === null) {
     feedbackMessage.value =
-      'Captcha indisponible pour le moment. Merci de reessayer.'
+      'Captcha indisponible pour le moment. Merci de réessayer.'
     return
   }
 
@@ -235,7 +237,7 @@ function handleSubmit() {
 
 async function completeSubmit() {
   if (!captchaToken.value) {
-    feedbackMessage.value = 'Validation captcha invalide. Merci de reessayer.'
+    feedbackMessage.value = 'Validation captcha invalide. Merci de réessayer.'
     return
   }
 
