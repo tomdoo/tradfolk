@@ -19,7 +19,7 @@ class Proposal(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     libelle: Mapped[str] = mapped_column(String(255), nullable=False)
-    image: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    image: Mapped[str] = mapped_column(String(1024), nullable=False)
     user_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     user_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     validated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

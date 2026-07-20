@@ -13,7 +13,7 @@ JSON_PATH = Path("/app/data/proposals.json")
 class ProposalImportItem(BaseModel):
     id: uuid.UUID
     label: str = Field(min_length=1, max_length=255)
-    image: str | None = Field(default=None, max_length=1024)
+    image: str = Field(min_length=1, max_length=1024)
     active: bool = True
 
 

@@ -343,13 +343,14 @@ def create_proposal():
     except RuntimeError:
         return json_error("Captcha invalide ou expiré", HTTPStatus.BAD_REQUEST)
 
-    image_path = None
     image_file = request.files.get("image")
-    if image_file and image_file.filename:
-        try:
-            image_path = save_proposal_image(image_file)
-        except ImageUploadError as exc:
-            return json_error(str(exc), HTTPStatus.BAD_REQUEST)
+    if not image_file or not image_file.filename:
+        return json_error("Une image est requise", HTTPStatus.BAD_REQUEST)
+
+    try:
+        image_path = save_proposal_image(image_file)
+    except ImageUploadError as exc:
+        return json_error(str(exc), HTTPStatus.BAD_REQUEST)
 
     with SessionLocal() as session:
         proposal = Proposal(
