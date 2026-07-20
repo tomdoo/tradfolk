@@ -9,3 +9,5 @@ backend/migrations/versions/__pycache__/
 
 frontend/dist/
 frontend/node_modules/
+
+uploads/
