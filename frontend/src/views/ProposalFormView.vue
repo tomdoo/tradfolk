@@ -54,13 +54,13 @@
         </label>
 
         <label class="proposal-field">
-          <span>URL de l'image (optionnel)</span>
+          <span>Image (optionnel)</span>
           <input
-            v-model.trim="form.imageUrl"
-            type="url"
-            name="imageUrl"
-            inputmode="url"
-            placeholder="https://..."
+            ref="imageInput"
+            type="file"
+            name="image"
+            accept="image/*"
+            @change="handleImageFile"
           />
         </label>
 
@@ -104,8 +104,10 @@ const form = reactive({
   email: '',
   name: '',
   proposal: '',
-  imageUrl: '',
 })
+
+const imageFile = ref(null)
+const imageInput = ref(null)
 
 const feedbackMessage = ref('')
 const successMessage = ref('')
@@ -204,6 +206,10 @@ onBeforeUnmount(() => {
   }
 })
 
+function handleImageFile(e) {
+  imageFile.value = e.target.files?.[0] ?? null
+}
+
 function handleSubmit() {
   if (!hasSiteKey.value) {
     feedbackMessage.value =
@@ -234,13 +240,16 @@ async function completeSubmit() {
 
   submitting.value = true
   try {
-    const { data } = await api.post('/proposals', {
-      email: form.email,
-      name: form.name,
-      proposal: form.proposal,
-      imageUrl: form.imageUrl || null,
-      turnstileToken: captchaToken.value,
-    })
+    const formData = new FormData()
+    formData.append('email', form.email)
+    formData.append('name', form.name)
+    formData.append('proposal', form.proposal)
+    formData.append('turnstileToken', captchaToken.value)
+    if (imageFile.value) {
+      formData.append('image', imageFile.value)
+    }
+
+    const { data } = await api.post('/proposals', formData)
 
     successMessage.value =
       data?.message ||
@@ -251,7 +260,8 @@ async function completeSubmit() {
     form.email = ''
     form.name = ''
     form.proposal = ''
-    form.imageUrl = ''
+    imageFile.value = null
+    if (imageInput.value) imageInput.value.value = ''
   } catch (error) {
     feedbackMessage.value = getApiErrorMessage(
       error,

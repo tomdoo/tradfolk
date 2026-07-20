@@ -11,6 +11,7 @@ services:
       - ./backend/migrations:/app/migrations
       - ./backend/scripts:/app/scripts
       - ./proposals.json:/app/data/proposals.json:ro
+      - uploads:/app/uploads
 
   frontend:
     build:
@@ -30,3 +31,4 @@ services:
 
 volumes:
   frontend_node_modules:
+  uploads:
