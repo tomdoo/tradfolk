@@ -54,12 +54,13 @@
         </label>
 
         <label class="proposal-field">
-          <span>Image (optionnel)</span>
+          <span>Image</span>
           <input
             ref="imageInput"
             type="file"
             name="image"
             accept="image/*"
+            required
             @change="handleImageFile"
           />
         </label>
