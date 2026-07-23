@@ -64,7 +64,7 @@ def save_proposal_image(file: FileStorage) -> str:
     # Downscale only — never upscale
     w, h = img.size
     if w > MAX_DIMENSION or h > MAX_DIMENSION:
-        img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.LANCZOS)
+        img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.Resampling.LANCZOS)
 
     save_dir = Path(UPLOAD_DIR) / PROPOSALS_SUBDIR
     save_dir.mkdir(parents=True, exist_ok=True)
