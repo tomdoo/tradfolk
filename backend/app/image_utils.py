@@ -3,7 +3,7 @@ import os
 import uuid
 from pathlib import Path
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageSequence, UnidentifiedImageError
 from werkzeug.datastructures import FileStorage
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/app/uploads")
@@ -27,6 +27,20 @@ class ImageUploadError(Exception):
     pass
 
 
+def _normalize_mode(frame: Image.Image) -> Image.Image:
+    if frame.mode in ("RGBA", "LA", "PA"):
+        return frame.convert("RGBA")
+    return frame.convert("RGB")
+
+
+def _downscale_only(frame: Image.Image) -> Image.Image:
+    w, h = frame.size
+    if w > MAX_DIMENSION or h > MAX_DIMENSION:
+        frame = frame.copy()
+        frame.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.Resampling.LANCZOS)
+    return frame
+
+
 def save_proposal_image(file: FileStorage) -> str:
     """Validate, convert to WebP, resize and persist an uploaded image.
 
@@ -46,31 +60,43 @@ def save_proposal_image(file: FileStorage) -> str:
         )
 
     try:
-        # verify() checks the file is not truncated/corrupt
         probe = Image.open(io.BytesIO(data))
         probe.verify()
     except (UnidentifiedImageError, Exception) as exc:
         raise ImageUploadError("Impossible de lire l'image.") from exc
 
-    # Reopen: verify() exhausts/closes the internal stream
     img = Image.open(io.BytesIO(data))
-
-    # Preserve transparency for formats that support it, otherwise use RGB
-    if img.mode in ("RGBA", "LA", "PA"):
-        img = img.convert("RGBA")
-    else:
-        img = img.convert("RGB")
-
-    # Downscale only — never upscale
-    w, h = img.size
-    if w > MAX_DIMENSION or h > MAX_DIMENSION:
-        img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.Resampling.LANCZOS)
 
     save_dir = Path(UPLOAD_DIR) / PROPOSALS_SUBDIR
     save_dir.mkdir(parents=True, exist_ok=True)
 
     filename = f"{uuid.uuid4()}.webp"
     file_path = save_dir / filename
-    img.save(file_path, format="WEBP", quality=85, method=6)
+
+    is_animated = bool(getattr(img, "is_animated", False) and getattr(img, "n_frames", 1) > 1)
+
+    if is_animated:
+        frames: list[Image.Image] = []
+        durations: list[int] = []
+
+        for frame in ImageSequence.Iterator(img):
+            processed = _downscale_only(_normalize_mode(frame))
+            frames.append(processed)
+            durations.append(int(frame.info.get("duration", 100)))
+
+        first, rest = frames[0], frames[1:]
+        first.save(
+            file_path,
+            format="WEBP",
+            save_all=True,
+            append_images=rest,
+            duration=durations,
+            loop=int(img.info.get("loop", 0)),
+            quality=85,
+            method=6,
+        )
+    else:
+        still = _downscale_only(_normalize_mode(img))
+        still.save(file_path, format="WEBP", quality=85, method=6)
 
     return f"/uploads/{PROPOSALS_SUBDIR}/{filename}"
