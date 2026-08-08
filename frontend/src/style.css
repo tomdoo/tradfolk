@@ -931,6 +931,15 @@ select {
   gap: 12px;
 }
 
+.proposal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.proposal-actions .next-btn {
+  flex: 1;
+}
+
 .proposal-success {
   margin-top: 20px;
   border: 1.5px solid var(--line);

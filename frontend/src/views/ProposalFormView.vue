@@ -2,13 +2,15 @@
   <section class="screen screen--proposal active">
     <div class="proposal-scroll">
       <div class="proposal-hero">
-        <h2>Envoyer une proposition</h2>
-        <p>
-          Remplis ce formulaire pour soumettre une nouvelle proposition. Une
-          fois envoyée, tu devras la valider par email. Ton nom et ton email ne
-          seront pas partagés publiquement ni utilisés à d'autres fins : ils
-          servent uniquement à valider ta proposition et à te contacter si
-          besoin.
+        <h1>Envoyer une proposition</h1>
+        <p v-if="!submissionDone && !verifying">
+          Un éclair de génie ? Remplis ce formulaire pour proposer une nouvelle idée. Après l'envoi, tu recevras un email pour la valider.
+        </p>
+        <p v-else-if="!submissionDone && verifying">
+          Voici ce que ça va donner, il est encore temps de modifier si ça ne va pas.
+        </p>
+        <p v-else>
+          Dernière étape : surveille tes emails pour confirmer ta proposition.
         </p>
       </div>
 
@@ -63,23 +65,25 @@
             {{ feedbackMessage }}
           </p>
 
-          <button
-            type="button"
-            class="next-btn proposal-submit-btn"
-            :disabled="!canSubmit"
-            @click="doActualSubmit"
-          >
-            Envoyer la proposition
-          </button>
+          <div class="proposal-actions">
+            <button
+              type="button"
+              class="next-btn next-btn--ghost proposal-modify-btn"
+              :disabled="captchaPending || submitting"
+              @click="backToForm"
+            >
+              Modifier
+            </button>
 
-          <button
-            type="button"
-            class="next-btn next-btn--ghost proposal-modify-btn"
-            :disabled="captchaPending || submitting"
-            @click="backToForm"
-          >
-            Modifier
-          </button>
+            <button
+              type="button"
+              class="next-btn proposal-submit-btn"
+              :disabled="!canSubmit"
+              @click="doActualSubmit"
+            >
+              Envoyer
+            </button>
+          </div>
         </div>
 
         <form
