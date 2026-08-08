@@ -4,10 +4,12 @@
       <div class="proposal-hero">
         <h1>Envoyer une proposition</h1>
         <p v-if="!submissionDone && !verifying">
-          Un éclair de génie ? Remplis ce formulaire pour proposer une nouvelle idée. Après l'envoi, tu recevras un email pour la valider.
+          Un éclair de génie ? Remplis ce formulaire pour proposer une nouvelle
+          idée. Après l'envoi, tu recevras un email pour la valider.
         </p>
         <p v-else-if="!submissionDone && verifying">
-          Voici ce que ça va donner, il est encore temps de modifier si ça ne va pas.
+          Voici ce que ça va donner, il est encore temps de modifier si ça ne va
+          pas.
         </p>
         <p v-else>
           Dernière étape : surveille tes emails pour confirmer ta proposition.
