@@ -5,22 +5,23 @@ from pathlib import Path
 import pyvips
 from werkzeug.datastructures import FileStorage
 
-
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/app/uploads")
 PROPOSALS_SUBDIR = "proposals"
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 MAX_DIMENSION = 2000
 
-ALLOWED_MIME_TYPES = frozenset({
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-    "image/bmp",
-    "image/tiff",
-})
+ALLOWED_MIME_TYPES = frozenset(
+    {
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "image/bmp",
+        "image/tiff",
+    }
+)
 
 
 class ImageUploadError(Exception):
@@ -87,11 +88,13 @@ def _resize_image(image: pyvips.Image) -> pyvips.Image:
 
     return image
 
+
 def _get_page_height(image: pyvips.Image) -> int:
     if image.get_typeof("page-height") != 0:
         return image.get("page-height")
 
     return image.height
+
 
 def save_proposal_image(file: FileStorage) -> str:
     """Validate, resize, convert to WebP and persist an uploaded image."""
@@ -101,8 +104,7 @@ def save_proposal_image(file: FileStorage) -> str:
 
     if content_type not in ALLOWED_MIME_TYPES:
         raise ImageUploadError(
-            "Type de fichier non supporté. "
-            "Formats acceptés : JPEG, PNG, WebP, GIF, BMP, TIFF."
+            "Type de fichier non supporté. " "Formats acceptés : JPEG, PNG, WebP, GIF, BMP, TIFF."
         )
 
     # Read uploaded data
@@ -110,8 +112,7 @@ def save_proposal_image(file: FileStorage) -> str:
 
     if len(data) > MAX_FILE_SIZE:
         raise ImageUploadError(
-            f"Image trop volumineuse. "
-            f"Taille maximale : {MAX_FILE_SIZE // (1024 * 1024)} Mo."
+            f"Image trop volumineuse. " f"Taille maximale : {MAX_FILE_SIZE // (1024 * 1024)} Mo."
         )
 
     # Decode image
@@ -138,8 +139,6 @@ def save_proposal_image(file: FileStorage) -> str:
             page_height=page_height,
         )
     except pyvips.Error as exc:
-        raise ImageUploadError(
-            "Impossible d'enregistrer l'image."
-        ) from exc
+        raise ImageUploadError("Impossible d'enregistrer l'image.") from exc
 
     return f"/uploads/{PROPOSALS_SUBDIR}/{filename}"
