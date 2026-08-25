@@ -23,25 +23,15 @@
 
       <p>
         Ce projet existe grâce à la communauté. Si tu aimes l’idée, tu peux
-        aider de trois façons, simples et concrètes :
+        aider de manière simple et concrète :
       </p>
 
       <ul class="contrib-list">
         <li>
-          <span class="contrib-label">💛 Financièrement</span>
-          <span class="contrib-text">
-            L’hébergement coûte 5,39&nbsp;€/mois et le nom de domaine
-            5,99&nbsp;€/an, soit environ <strong>70,67&nbsp;€/an</strong>.
-            Chaque soutien, même modeste, aide à garder le site en ligne et
-            libre d’accès. Pour le moment, tu peux remonter jusqu'à la personne
-            qui héberge le site pour s'arranger directement.
-          </span>
-        </li>
-        <li>
           <span class="contrib-label">✍️ En proposant</span>
           <span class="contrib-text">
-            Envoie-nous une proposition à ajouter : un titre et une image si tu
-            en as une. Envoie le tout via
+            Une idée de proposition à ajouter ? Il faut juste un titre et une
+            image. Envoie le tout via
             <RouterLink to="/propose">ce formulaire</RouterLink>.
           </span>
         </li>
