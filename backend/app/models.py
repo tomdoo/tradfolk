@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
 
-class VoteValue(str, enum.Enum):
+class VoteValue(enum.StrEnum):
     trad = "trad"
     folk = "folk"
 

@@ -8,11 +8,11 @@ Base = declarative_base()
 
 def get_database_url():
     return (
-        f"postgresql+psycopg2://{os.getenv('POSTGRES_USER','tradfolk')}:"
-        f"{os.getenv('POSTGRES_PASSWORD','tradfolk')}@"
-        f"{os.getenv('POSTGRES_HOST','db')}:"
-        f"{os.getenv('POSTGRES_PORT','5432')}/"
-        f"{os.getenv('POSTGRES_DB','tradfolk')}"
+        f"postgresql+psycopg2://{os.getenv('POSTGRES_USER', 'tradfolk')}:"
+        f"{os.getenv('POSTGRES_PASSWORD', 'tradfolk')}@"
+        f"{os.getenv('POSTGRES_HOST', 'db')}:"
+        f"{os.getenv('POSTGRES_PORT', '5432')}/"
+        f"{os.getenv('POSTGRES_DB', 'tradfolk')}"
     )
 
 
