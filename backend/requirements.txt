@@ -5,7 +5,7 @@ SQLAlchemy==2.0.52
 psycopg2-binary==2.9.9
 alembic==1.19.1
 gunicorn==26.2.0
-pydantic==2.13.4
+pydantic==2.13.5
 itsdangerous==2.2.0
 Pillow==12.3.0
 pyvips==3.1.1
