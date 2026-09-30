@@ -238,11 +238,11 @@ select {
 }
 
 .swipe-tutorial__legend span:first-child {
-  color: var(--folk-deep);
+  color: var(--trad);
 }
 
 .swipe-tutorial__legend span:last-child {
-  color: var(--trad);
+  color: var(--folk-deep);
 }
 
 .swipe-tutorial__button {
