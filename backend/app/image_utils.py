@@ -104,7 +104,7 @@ def save_proposal_image(file: FileStorage) -> str:
 
     if content_type not in ALLOWED_MIME_TYPES:
         raise ImageUploadError(
-            "Type de fichier non supporté. " "Formats acceptés : JPEG, PNG, WebP, GIF, BMP, TIFF."
+            "Type de fichier non supporté. Formats acceptés : JPEG, PNG, WebP, GIF, BMP, TIFF."
         )
 
     # Read uploaded data
@@ -112,7 +112,7 @@ def save_proposal_image(file: FileStorage) -> str:
 
     if len(data) > MAX_FILE_SIZE:
         raise ImageUploadError(
-            f"Image trop volumineuse. " f"Taille maximale : {MAX_FILE_SIZE // (1024 * 1024)} Mo."
+            f"Image trop volumineuse. Taille maximale : {MAX_FILE_SIZE // (1024 * 1024)} Mo."
         )
 
     # Decode image
