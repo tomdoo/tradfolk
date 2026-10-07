@@ -78,7 +78,7 @@ def _resize_image(image: pyvips.Image) -> pyvips.Image:
     image = image.resize(
         scale,
         vscale=scale,
-        kernel="lanczos",
+        kernel="lanczos3",
     )
 
     # Preserve the frame height after resizing.
