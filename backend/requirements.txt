@@ -7,5 +7,5 @@ alembic==1.20.0
 gunicorn==26.2.0
 pydantic==2.13.5
 itsdangerous==2.2.0
-Pillow==12.3.0
+Pillow==13.0.0
 pyvips==3.2.0
